@@ -1,0 +1,5 @@
+compiler:
+  solc:
+    version: 0.5.17
+
+autofetch_sources: True
