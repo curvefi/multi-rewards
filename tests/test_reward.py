@@ -36,10 +36,7 @@ def test_reward_unmodifiable(
 ):
     with brownie.reverts():
         multi_reward.addReward(
-            reward_token,
-            accounts[account_id],
-            3600,
-            {"from": accounts[account_id2]}
+            reward_token, accounts[account_id], 3600, {"from": accounts[account_id2]}
         )
 
 
@@ -82,6 +79,4 @@ def test_rando_notify_reward_amount(
     reward_token.approve(charlie, 10 ** 19)
     multi_reward.setRewardsDistributor(reward_token, bob, {"from": alice})
     with brownie.reverts():
-        multi_reward.notifyRewardAmount(
-                reward_token, 10 ** 10, {"from": charlie}
-        )
+        multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": charlie})

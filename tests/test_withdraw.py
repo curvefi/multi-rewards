@@ -31,45 +31,23 @@ def test_cannot_get_empty_reward(multi_reward, reward_token, accounts, alice):
 
 
 # Can user retrieve reward after a time cycle?
-def test_get_reward(multi_reward, reward_token, accounts, alice, chain):
-    multi_reward.stake(10 ** 18, {"from": alice})
-    reward_token.approve(multi_reward, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
-    _init_amount = reward_token.balanceOf(alice)
-    chain.sleep(60)
-    chain.mine()
-    assert multi_reward.earned(alice, reward_token) > 0
+def test_get_reward(multi_reward, reward_token, accounts, alice, chain, issue_reward):
     multi_reward.getReward({"from": alice})
     _final_amount = reward_token.balanceOf(alice)
     assert _final_amount > _init_amount
 
 
 # Does the exit function successfully withdraw?
-def test_exit(multi_reward, reward_token, accounts, alice, chain):
-    multi_reward.stake(10 ** 18, {"from": alice})
-    reward_token.approve(multi_reward, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
-    _init_amount = reward_token.balanceOf(alice)
-    chain.sleep(60)
-    chain.mine()
-    assert multi_reward.earned(alice, reward_token) > 0
+def test_exit(multi_reward, reward_token, accounts, alice, chain, issue_reward):
     multi_reward.exit({"from": alice})
     _final_amount = reward_token.balanceOf(alice)
     assert _final_amount > _init_amount
 
 
 # Does the ERC20 recovery function produce expected behavior?
-def test_recover_erc20(multi_reward, reward_token, accounts, alice, chain):
-    multi_reward.stake(10 ** 18, {"from": alice})
-    reward_token.approve(multi_reward, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
-    _init_amount = reward_token.balanceOf(alice)
-    chain.sleep(60)
-    chain.mine()
-    assert multi_reward.earned(alice, reward_token) > 0
+def test_recover_erc20(
+    multi_reward, reward_token, accounts, alice, chain, issue_reward
+):
     multi_reward.recoverERC20(reward_token, 10 ** 10, {"from": alice})
     _final_amount = reward_token.balanceOf(alice)
     assert _final_amount > _init_amount
@@ -77,16 +55,8 @@ def test_recover_erc20(multi_reward, reward_token, accounts, alice, chain):
 
 # ERC20 function should fail on non-owner
 def test_recover_erc20_onlyowner(
-    multi_reward, reward_token, accounts, alice, bob, chain
+    multi_reward, reward_token, accounts, alice, bob, chain, issue_reward
 ):
-    multi_reward.stake(10 ** 18, {"from": alice})
-    reward_token.approve(multi_reward, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
-    _init_amount = reward_token.balanceOf(bob)
-    chain.sleep(60)
-    chain.mine()
-    assert multi_reward.earned(alice, reward_token) > 0
     with brownie.reverts():
         multi_reward.recoverERC20(reward_token, 10 ** 10, {"from": bob})
     _final_amount = reward_token.balanceOf(bob)
