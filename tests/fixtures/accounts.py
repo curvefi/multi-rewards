@@ -1,5 +1,6 @@
 import pytest
 
+
 # Hi Alice
 @pytest.fixture(scope="session")
 def alice(accounts):
