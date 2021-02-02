@@ -3,10 +3,6 @@
 import pytest
 from brownie import CurveTokenV1, CurveTokenV2, CurveTokenV3
 
-pytest_plugins = [
-    "fixtures.accounts",
-]
-
 
 # Reset
 @pytest.fixture(scope="function", autouse=True)
@@ -62,6 +58,7 @@ def issue_reward(multi_reward, reward_token, alice, bob, chain):
     _init_amount = reward_token.balanceOf(bob)
     chain.mine(timedelta=60)
     assert multi_reward.earned(alice, reward_token) > 0
+    return _init_amount
 
 
 # Hi Alice

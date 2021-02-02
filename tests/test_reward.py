@@ -29,14 +29,14 @@ def test_distributor_cannot_modify_reward(
 
 
 # No user can modify reward
-@pytest.mark.parametrize("account_id", range(5))
-@pytest.mark.parametrize("account_id2", range(5))
+@pytest.mark.parametrize("_id", range(5))
+@pytest.mark.parametrize("_id2", range(5))
 def test_reward_unmodifiable(
-    multi_reward, accounts, reward_token, account_id, account_id2
+    multi_reward, accounts, reward_token, _id, _id2
 ):
     with brownie.reverts():
         multi_reward.addReward(
-            reward_token, accounts[account_id], 3600, {"from": accounts[account_id2]}
+            reward_token, accounts[_id], 3600, {"from": accounts[_id2]}
         )
 
 
@@ -79,4 +79,6 @@ def test_rando_notify_reward_amount(
     reward_token.approve(charlie, 10 ** 19)
     multi_reward.setRewardsDistributor(reward_token, bob, {"from": alice})
     with brownie.reverts():
-        multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": charlie})
+        multi_reward.notifyRewardAmount(
+                reward_token, 10 ** 10, {"from": charlie}
+        )
