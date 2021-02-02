@@ -2,9 +2,6 @@
 
 import brownie
 import pytest
-from brownie import CurveTokenV1, CurveTokenV2
-from brownie.test import given, strategy
-from hypothesis import settings
 
 
 # Initial accounts at zero
@@ -25,7 +22,7 @@ def test_contract_pausable(multi_reward, accounts, alice):
 
 
 # Can contract be paused and unpaused
-def test_contract_pausable(multi_reward, accounts, alice):
+def test_contract_unpausable(multi_reward, accounts, alice):
     multi_reward.setPaused(True, {"from": alice})
     multi_reward.setPaused(False, {"from": alice})
     assert multi_reward.paused() is False
@@ -33,7 +30,7 @@ def test_contract_pausable(multi_reward, accounts, alice):
 
 # Can contract be paused by a rando?
 @pytest.mark.parametrize("idx", range(1, 10))
-def test_contract_pausable(multi_reward, accounts, alice, idx):
+def test_contract_not_pausable_by_public(multi_reward, accounts, alice, idx):
     with brownie.reverts():
         multi_reward.setPaused(True, {"from": accounts[idx]})
     assert multi_reward.paused() is False
@@ -48,5 +45,6 @@ def test_replace_owner(multi_reward, accounts, alice, bob):
 
 # Unnominated person should not be able to swipe the contract's ownership
 def test_cannot_accept_unassigned_ownership(multi_reward, accounts, bob):
-    with brownie.reverts("You must be nominated before you can accept ownership"):
+    phrase = "You must be nominated before you can accept ownership"
+    with brownie.reverts(phrase):
         multi_reward.acceptOwnership({"from": bob})

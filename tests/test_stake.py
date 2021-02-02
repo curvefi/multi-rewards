@@ -2,9 +2,6 @@
 
 import brownie
 import pytest
-from brownie import CurveTokenV1, CurveTokenV2
-from brownie.test import given, strategy
-from hypothesis import settings
 
 
 # Starting balance for owner is zero
@@ -13,7 +10,7 @@ def test_initial_stake_is_zero(multi_reward, accounts, alice):
 
 
 # Can owner stake?
-def test_owner_place_stake(multi_reward, accounts, base_token, reward_token, alice):
+def test_owner_place_stake(multi_reward, reward_token, alice):
     multi_reward.stake(10000, {"from": alice})
     assert multi_reward.balanceOf(alice) > 0
 
@@ -28,7 +25,7 @@ def test_place_stake(multi_reward, accounts, base_token, reward_token, idx):
 
 # Unbanked users should not be able to stake
 @pytest.mark.parametrize("idx", range(6, 10))
-def test_place_stake(multi_reward, accounts, base_token, reward_token, idx):
+def test_no_unbanked_stake(multi_reward, accounts, base_token, idx):
     base_token.approve(multi_reward, 1000000, {"from": accounts[idx]})
     with brownie.reverts():
         multi_reward.stake(1000000, {"from": accounts[idx]})

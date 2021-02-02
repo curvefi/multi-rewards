@@ -2,19 +2,15 @@
 
 import pytest
 from brownie import CurveTokenV1, CurveTokenV2, CurveTokenV3
-from brownie.test import given, strategy
-from hypothesis import settings
 
 pytest_plugins = [
     "fixtures.accounts",
 ]
 
+
 # Reset
 @pytest.fixture(scope="function", autouse=True)
 def isolate(fn_isolation):
-    # perform a chain rewind after completing each test, to ensure proper isolation
-    # https://eth-brownie.readthedocs.io/en/v1.10.3/tests-pytest-intro.html#isolation-fixtures
-    # Chain.reset()
     pass
 
 
@@ -29,7 +25,7 @@ def multi_reward(MultiRewards, base_token, alice, bob):
 # Instantiate base token and provide 5 addresses a balance
 @pytest.fixture(scope="module")
 def base_token(accounts, alice):
-    _token = CurveTokenV1.deploy("Base Token", "TST", 18, 10 ** 19, {"from": alice})
+    _token = CurveTokenV1.deploy("Base", "TST", 18, 10 ** 19, {"from": alice})
     for idx in range(1, 5):
         _token.mint(accounts[idx], 10 ** 19)
     return _token

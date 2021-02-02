@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 
 import brownie
-import pytest
-from brownie import CurveTokenV1, CurveTokenV2
 from brownie.test import given, strategy
-from hypothesis import settings
 
 
 # Can the owner stake and then withdraw?
@@ -26,7 +23,7 @@ def test_unstaked_cannot_withdraw(multi_reward, accounts, bob, amount):
 # User should not be able to withdraw a reward if empty
 def test_cannot_get_empty_reward(multi_reward, reward_token, accounts, alice):
     # XXX Add some cycles
-    _amount = multi_reward.getRewardForDuration(reward_token, {"from": alice})
+    # _amount=multi_reward.getRewardForDuration(reward_token, {"from": alice})
     _init_amount = reward_token.balanceOf(alice)
     multi_reward.getReward({"from": alice})
     _final_amount = reward_token.balanceOf(alice)
