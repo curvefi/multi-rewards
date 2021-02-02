@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import pytest
 import brownie
+import pytest
 from brownie import CurveTokenV1, CurveTokenV2
 from brownie.test import given, strategy
 from hypothesis import settings
+
 
 # Starting balance for owner is zero
 def test_initial_stake_is_zero(multi_reward, accounts, alice):

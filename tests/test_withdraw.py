@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import pytest
 import brownie
+import pytest
 from brownie import CurveTokenV1, CurveTokenV2
 from brownie.test import given, strategy
 from hypothesis import settings
+
 
 # Can the owner stake and then withdraw?
 @given(amount=strategy("uint256", max_value=10 ** 18, exclude=0))

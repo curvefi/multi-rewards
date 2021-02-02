@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import pytest
 import brownie
+import pytest
 from brownie import CurveTokenV1, CurveTokenV2
 from brownie.test import given, strategy
 from hypothesis import settings
+
 
 # Initial accounts at zero
 @pytest.mark.parametrize("idx", range(5))
