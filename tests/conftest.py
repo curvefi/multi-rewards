@@ -54,12 +54,29 @@ def reward_token2(multi_reward, accounts, alice, charlie):
 
 # Distribute rewards
 @pytest.fixture(scope="module")
-def issue_reward(multi_reward, reward_token, alice, bob):
+def issue_reward(multi_reward, reward_token, alice, bob, chain):
     multi_reward.stake(10 ** 18, {"from": alice})
     reward_token.approve(multi_reward, 10 ** 19)
     multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
     _init_amount = reward_token.balanceOf(bob)
-    chain.sleep(60)
-    chain.mine()
+    chain.mine(timedelta=60)
     assert multi_reward.earned(alice, reward_token) > 0
+
+
+# Hi Alice
+@pytest.fixture(scope="session")
+def alice(accounts):
+    yield accounts[0]
+
+
+# Hey-a Bob
+@pytest.fixture(scope="session")
+def bob(accounts):
+    yield accounts[1]
+
+
+# Don't forget Charlie
+@pytest.fixture(scope="session")
+def charlie(accounts):
+    yield accounts[2]
