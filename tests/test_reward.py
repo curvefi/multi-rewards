@@ -5,80 +5,61 @@ import pytest
 
 
 # Was Reward Token 1 instantiated to Bob?
-def test_reward_added(multi_reward, accounts, reward_token, bob):
-    assert multi_reward.rewardData(reward_token)[0] == bob
+def test_reward_added(multi, accounts, reward_token, bob):
+    assert multi.rewardData(reward_token)[0] == bob
 
 
 # Was Reward Token 1 instantiated to Charlie?
-def test_reward2_added(multi_reward, accounts, reward_token2, charlie):
-    assert multi_reward.rewardData(reward_token2)[0] == charlie
+def test_reward2_added(multi, accounts, reward_token2, charlie):
+    assert multi.rewardData(reward_token2)[0] == charlie
 
 
 # Owner cannot modify reward
-def test_owner_cannot_modify_reward(multi_reward, reward_token, alice):
+def test_owner_cannot_modify_reward(multi, reward_token, alice):
     with brownie.reverts():
-        multi_reward.addReward(reward_token, alice, 3600, {"from": alice})
-
-
-# Distributor cannot modify reward
-def test_distributor_cannot_modify_reward(
-    multi_reward, accounts, reward_token, alice, bob
-):
-    with brownie.reverts():
-        multi_reward.addReward(reward_token, alice, 3600, {"from": bob})
+        multi.addReward(reward_token, alice, 3600, {"from": alice})
 
 
 # No user can modify reward
 @pytest.mark.parametrize("_id", range(5))
 @pytest.mark.parametrize("_id2", range(5))
-def test_reward_unmodifiable(
-    multi_reward, accounts, reward_token, _id, _id2
-):
+def test_reward_unmodifiable(multi, accounts, reward_token, _id, _id2):
     with brownie.reverts():
-        multi_reward.addReward(
-            reward_token, accounts[_id], 3600, {"from": accounts[_id2]}
-        )
+        _from = {"from": accounts[_id2]}
+        multi.addReward(reward_token, accounts[_id], 3600, _from)
 
 
 # Can distributor set reward?
-def test_set_rewards_distributor(multi_reward, reward_token, alice, bob):
-    multi_reward.setRewardsDistributor(reward_token, bob, {"from": alice})
-    assert multi_reward.rewardData(reward_token)[0] == bob
+def test_set_rewards_distributor(multi, reward_token, alice, bob):
+    multi.setRewardsDistributor(reward_token, bob, {"from": alice})
+    assert multi.rewardData(reward_token)[0] == bob
 
 
 # The owner of the reward token can mint for new accounts
 @pytest.mark.parametrize("account_id", range(5))
 def test_owner_can_mint(accounts, reward_token, alice, account_id):
-    reward_token.mint(accounts[account_id], 10 ** 10, {"from": alice})
+    _from = {"from": alice}
+    reward_token._mint_for_testing(accounts[account_id], 10 ** 10, _from)
     assert reward_token.balanceOf(alice) >= 10 ** 10
-
-
-# The distributor cannot mint reward tokens
-@pytest.mark.parametrize("account_id", range(1, 5))
-def test_distributor_cannot_mint(accounts, reward_token, account_id):
-    _account = accounts[account_id]
-    with brownie.reverts():
-        reward_token.mint(_account, 10 ** 19, {"from": _account})
 
 
 # Are owners able to update reward notification?
 def test_owner_notify_reward_amount(
-    multi_reward, accounts, reward_token, alice, bob, base_token, chain
+    multi, accounts, reward_token, alice, bob, base_token, chain
 ):
-    reward_token.approve(multi_reward, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi_reward.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
-    assert multi_reward.getRewardForDuration(reward_token) > 0
+    reward_token.approve(multi, 10 ** 19, {"from": alice})
+    # reward_token.approve(alice, 10 ** 10)
+    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
+    assert multi.getRewardForDuration(reward_token) > 0
 
 
 # Random users should not be able to access notifyRewardAmount
 def test_rando_notify_reward_amount(
-    multi_reward, reward_token, alice, bob, charlie, base_token, chain
+    multi, reward_token, alice, bob, charlie, base_token, chain
 ):
-    reward_token.approve(multi_reward, 10 ** 19)
+    reward_token.approve(multi, 10 ** 19)
     reward_token.approve(charlie, 10 ** 19)
-    multi_reward.setRewardsDistributor(reward_token, bob, {"from": alice})
+    multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     with brownie.reverts():
-        multi_reward.notifyRewardAmount(
-                reward_token, 10 ** 10, {"from": charlie}
-        )
+        multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": charlie})
