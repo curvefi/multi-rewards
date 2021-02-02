@@ -1,4 +1,4 @@
-#def test_distributor_notify_reward_amount(multi_reward, accounts, reward_token, alice, bob, base_token, chain):
+# def test_distributor_notify_reward_amount(multi_reward, accounts, reward_token, alice, bob, base_token, chain):
 #    reward_token.approve(multi_reward, 10**19)
 #    reward_token.approve(bob, 10**19)
 #    reward_token.approve(alice, 10**19)
