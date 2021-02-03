@@ -46,9 +46,7 @@ def test_owner_can_mint(accounts, reward_token, alice, account_id):
 
 
 # Are owners able to update reward notification?
-def test_owner_notify_reward_amount(
-    multi, accounts, reward_token, alice, bob, base_token, chain
-):
+def test_owner_notify_reward_amount(multi, accounts, reward_token, alice, bob, base_token, chain):
     reward_token.approve(multi, 10 ** 19, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
