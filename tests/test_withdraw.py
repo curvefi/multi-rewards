@@ -6,7 +6,6 @@ from brownie.test import given, strategy
 
 # Can the owner stake and then withdraw?
 @given(amount=strategy("uint256", max_value=10 ** 18, exclude=0))
-# @settings(max_examples=5)
 def test_owner_withdraw(multi, alice, amount):
     multi.stake(amount, {"from": alice})
     multi.withdraw(amount, {"from": alice})
@@ -20,19 +19,22 @@ def test_unstaked_cannot_withdraw(multi, bob, amount):
         multi.withdraw(amount, {"from": bob})
 
 
+
 # User should not be able to withdraw a reward if empty
-def test_cannot_get_empty_reward(multi, reward_token, alice):
-    # XXX Add some cycles
-    # _amount=multi.getRewardForDuration(reward_token, {"from": alice})
+@given(t=strategy('uint256', max_value=31557600))
+def test_cannot_get_empty_reward(multi, reward_token, alice, chain, t):
     _init_amount = reward_token.balanceOf(alice)
+    chain.mine(timedelta=t)
     multi.getReward({"from": alice})
     _final_amount = reward_token.balanceOf(alice)
     assert _init_amount == _final_amount
 
 
 # Can user retrieve reward after a time cycle?
-def test_get_reward(multi, reward_token, alice, issue):
+@given(t=strategy('uint256', max_value=31557600))
+def test_get_reward(multi, reward_token, alice, issue, chain, t):
     multi.getReward({"from": alice})
+    chain.mine(timedelta=t)
     _final_amount = reward_token.balanceOf(alice)
     assert _final_amount > issue
 
