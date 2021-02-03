@@ -2,6 +2,7 @@
 
 import brownie
 import pytest
+
 from brownie_tokens.template import ERC20
 
 
