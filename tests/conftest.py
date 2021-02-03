@@ -51,7 +51,6 @@ def reward_token2(multi, accounts, alice, charlie):
 # Distribute rewards
 @pytest.fixture(scope="module")
 def issue(multi, reward_token, alice, bob, chain):
-    multi.stake(10 ** 18, {"from": alice})
     reward_token.approve(multi, 10 ** 19, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
