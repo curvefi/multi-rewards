@@ -2,6 +2,8 @@
 
 import brownie
 import pytest
+from brownie.test import given, strategy
+from hypothesis import settings
 
 
 # Was Reward Token 1 instantiated to Bob?
@@ -66,9 +68,79 @@ def test_notify_without_distributor(multi, reward_token, alice):
         multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
 
 
-# Will Alice, Bob, and Charlie all earn rewards?
+# Reward per token accurate?
+@given(_amt=strategy("uint256", max_value=(10 ** 17), exclude=0))
+def test_reward_per_token(multi, alice, reward_token, issue, _amt, chain):
+    multi.notifyRewardAmount(reward_token, _amt, {"from": alice})
+    _init_rpt = multi.rewardPerToken(reward_token)
+
+    chain.mine(timedelta=100)
+    assert _init_rpt + _amt > multi.rewardPerToken(reward_token) * 0.98
+    assert _init_rpt + _amt < multi.rewardPerToken(reward_token) * 1.02
+
+
+# Rewards struct updates as expected
+@given(_amt=strategy("uint256", min_value=(10 ** 10), max_value=(10 ** 16), exclude=0))
+def test_rewards_update(multi, alice, reward_token, issue, _amt, chain, base_token):
+    _r = []
+    _r.append(multi.rewardData(reward_token))
+    chain.mine(timedelta=60)
+    for i in range(1, 5):
+        multi.notifyRewardAmount(reward_token, _amt, {"from": alice})
+        chain.mine(timedelta=60)
+
+        _r.append(multi.rewardData(reward_token))
+        assert _r[i - 1]["periodFinish"] < _r[i]["periodFinish"]
+        assert _r[i - 1]["lastUpdateTime"] < _r[i]["lastUpdateTime"]
+        assert _r[i - 1]["rewardPerTokenStored"] <= _r[i]["rewardPerTokenStored"]
+
+
+# Is last reward time applicable correct?
+@given(_amt=strategy("uint256", max_value=(10 ** 16), exclude=0))
+def test_last_time_reward_applicable(multi, reward_token, chain, _amt, alice):
+    _last_time = multi.lastTimeRewardApplicable(reward_token)
+    for i in range(5):
+        multi.notifyRewardAmount(reward_token, _amt, {"from": alice})
+        chain.mine(timedelta=60)
+        _curr_time = multi.lastTimeRewardApplicable(reward_token)
+        assert _curr_time > _last_time
+        _last_time = _curr_time
+
+
+# Reward per duration accurate?
+@given(_amt=strategy("uint256", max_value=(10 ** 17), exclude=0))
+def test_reward_per_duration(multi, reward_token, _amt, alice):
+    multi.notifyRewardAmount(reward_token, _amt, {"from": alice})
+    multi.getRewardForDuration(reward_token) > _amt * 0.95
+    multi.getRewardForDuration(reward_token) < _amt * 1.05
+
+
+# Reward per token paid accurate?
+def test_reward_per_token_paid(multi, reward_token, alice, chain):
+    for i in range(5):
+        _last_val = multi.userRewardPerTokenPaid(alice, reward_token)
+        multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
+        chain.mine(timedelta=60)
+        multi.getReward()
+        assert multi.userRewardPerTokenPaid(alice, reward_token) > _last_val
+
+
+# Will Alice, Bob and Charlie earn correct reward amounts?
+@given(_am1=strategy("uint256", max_value=10 ** 19, exclude=0))
+@given(_am2=strategy("uint256", max_value=10 ** 19, exclude=0))
+@settings(max_examples=5)
 def test_multiple_reward(
-    multi, reward_token, reward_token2, alice, bob, charlie, chain, base_token
+    multi,
+    reward_token,
+    reward_token2,
+    alice,
+    bob,
+    charlie,
+    accounts,
+    chain,
+    base_token,
+    _am1,
+    _am2,
 ):
     reward_token.approve(multi, 10 ** 19, {"from": bob})
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
@@ -78,16 +150,29 @@ def test_multiple_reward(
     multi.setRewardsDistributor(reward_token2, charlie, {"from": alice})
     multi.notifyRewardAmount(reward_token2, 10 ** 10, {"from": charlie})
 
-    base_token.approve(multi, 10 ** 5, {"from": bob})
-    base_token.approve(multi, 10 ** 5, {"from": charlie})
-    multi.stake(10 ** 5, {"from": bob})
-    multi.stake(10 ** 5, {"from": charlie})
+    base_token.approve(multi, _am1, {"from": bob})
+    multi.stake(_am1, {"from": bob})
 
-    chain.mine(timedelta=120)
+    base_token.approve(multi, _am2, {"from": charlie})
+    multi.stake(_am2, {"from": charlie})
 
-    assert multi.earned(alice, reward_token) == 0
-    assert multi.earned(bob, reward_token) > 0
-    assert multi.earned(charlie, reward_token) > 0
-    assert multi.earned(alice, reward_token2) == 0
-    assert multi.earned(bob, reward_token2) > 0
-    assert multi.earned(charlie, reward_token2) > 0
+    chain.mine(timedelta=60)
+
+    for i in range(2):
+        _e1 = (
+            multi.balanceOf(accounts[i])
+            * (
+                multi.rewardPerToken(reward_token)
+                - multi.userRewardPerTokenPaid(accounts[i], reward_token)
+            )
+        ) // (10 ** 18) + multi.rewards(accounts[i], reward_token)
+        assert multi.earned(accounts[i], reward_token) == _e1
+
+        _e2 = (
+            multi.balanceOf(accounts[i])
+            * (
+                multi.rewardPerToken(reward_token2)
+                - multi.userRewardPerTokenPaid(accounts[i], reward_token2)
+            )
+        ) // (10 ** 18) + multi.rewards(accounts[i], reward_token2)
+        assert multi.earned(accounts[i], reward_token2) == _e2
