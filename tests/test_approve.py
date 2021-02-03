@@ -48,3 +48,28 @@ def test_cannot_accept_unassigned_ownership(multi, accounts, bob):
     phrase = "You must be nominated before you can accept ownership"
     with brownie.reverts(phrase):
         multi.acceptOwnership({"from": bob})
+
+
+# No supply at start
+def test_no_initial_supply(multi):
+    assert multi.totalSupply() == 0
+
+
+# No reward time at start
+def test_no_last_time_reward(multi, reward_token):
+    assert multi.lastTimeRewardApplicable(reward_token) == 0
+
+
+# No owner earnings at start
+def test_no_initial_earnings_alice(multi, reward_token, alice):
+    assert multi.earned(alice, reward_token) == 0
+
+
+# No bob earnings at start
+def test_no_initial_earnings_bob(multi, reward_token, bob):
+    assert multi.earned(bob, reward_token) == 0
+
+
+# No charlie earnings at start
+def test_no_initial_earnings_charlie(multi, reward_token, charlie):
+    assert multi.earned(charlie, reward_token) == 0

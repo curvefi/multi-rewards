@@ -48,18 +48,46 @@ def test_owner_notify_reward_amount(
     multi, accounts, reward_token, alice, bob, base_token, chain
 ):
     reward_token.approve(multi, 10 ** 19, {"from": alice})
-    # reward_token.approve(alice, 10 ** 10)
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
     assert multi.getRewardForDuration(reward_token) > 0
 
 
 # Random users should not be able to access notifyRewardAmount
-def test_rando_notify_reward_amount(
-    multi, reward_token, alice, bob, charlie, base_token, chain
-):
-    reward_token.approve(multi, 10 ** 19)
-    reward_token.approve(charlie, 10 ** 19)
+def test_rando_notify_reward_amount(multi, reward_token, alice, bob, charlie):
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     with brownie.reverts():
         multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": charlie})
+
+
+# Cannot call notifyRewardAmount without Distributor set
+def test_notify_without_distributor(multi, reward_token, alice):
+    with brownie.reverts():
+        multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
+
+
+# Will Alice, Bob, and Charlie all earn rewards?
+def test_multiple_reward(
+    multi, reward_token, reward_token2, alice, bob, charlie, chain, base_token
+):
+    reward_token.approve(multi, 10 ** 19, {"from": bob})
+    multi.setRewardsDistributor(reward_token, bob, {"from": alice})
+    multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": bob})
+
+    reward_token2.approve(multi, 10 ** 19, {"from": charlie})
+    multi.setRewardsDistributor(reward_token2, charlie, {"from": alice})
+    multi.notifyRewardAmount(reward_token2, 10 ** 10, {"from": charlie})
+
+    base_token.approve(multi, 10 ** 5, {"from": bob})
+    base_token.approve(multi, 10 ** 5, {"from": charlie})
+    multi.stake(10 ** 5, {"from": bob})
+    multi.stake(10 ** 5, {"from": charlie})
+
+    chain.mine(timedelta=120)
+
+    assert multi.earned(alice, reward_token) == 0
+    assert multi.earned(bob, reward_token) > 0
+    assert multi.earned(charlie, reward_token) > 0
+    assert multi.earned(alice, reward_token2) == 0
+    assert multi.earned(bob, reward_token2) > 0
+    assert multi.earned(charlie, reward_token2) > 0

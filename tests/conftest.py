@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 import pytest
-
-# from brownie import CurveTokenV1, CurveTokenV2, CurveTokenV3
 from brownie_tokens.template import ERC20
 
 
