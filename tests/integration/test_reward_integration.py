@@ -50,7 +50,7 @@ def test_multiple_reward_earnings_act(
     chain,
     base_token,
     amount1,
-    amount2
+    amount2,
 ):
     reward_amount = 10 ** 10
     reward_token.approve(multi, 10 ** 19, {"from": bob})
@@ -72,10 +72,10 @@ def test_multiple_reward_earnings_act(
     chain.mine(timedelta=60)
 
     # Check reward per token calculation is accurate
-    reward_per_token_stored = multi.rewardData(reward_token)['rewardPerTokenStored']
+    reward_per_token_stored = multi.rewardData(reward_token)["rewardPerTokenStored"]
     reward_rate = reward_amount // 60
     time_max = multi.lastTimeRewardApplicable(reward_token)
-    time_min = multi.rewardData(reward_token)['lastUpdateTime']
+    time_min = multi.rewardData(reward_token)["lastUpdateTime"]
     interval = time_max - time_min
     rpt_calc = (interval * 10 ** 18 * reward_rate) // (amount1 + amount2)
     rpt = multi.rewardPerToken(reward_token)
@@ -128,7 +128,7 @@ def test_rewards_update(multi, alice, reward_token, amount, chain, base_token):
     reward_token.approve(multi, amount, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, amount, {"from": alice})
-    multi.stake(amount, {'from': alice})
+    multi.stake(amount, {"from": alice})
 
     rewards = []
     rewards.append(multi.rewardData(reward_token))
@@ -136,13 +136,13 @@ def test_rewards_update(multi, alice, reward_token, amount, chain, base_token):
     for i in range(1, 5):
         reward_token.approve(multi, amount, {"from": alice})
         multi.notifyRewardAmount(reward_token, amount, {"from": alice})
-        multi.stake(amount, {'from': alice})
+        multi.stake(amount, {"from": alice})
         chain.mine(timedelta=60)
 
         rewards.append(multi.rewardData(reward_token))
         curr = rewards[i]
         last = rewards[i - 1]
 
-        assert last['periodFinish'] < curr['periodFinish']
-        assert last['lastUpdateTime'] < curr['lastUpdateTime']
-        assert last['rewardPerTokenStored'] < curr['rewardPerTokenStored']
+        assert last["periodFinish"] < curr["periodFinish"]
+        assert last["lastUpdateTime"] < curr["lastUpdateTime"]
+        assert last["rewardPerTokenStored"] < curr["rewardPerTokenStored"]

@@ -27,13 +27,15 @@ def test_contract_unpausable(multi, accounts, alice):
     multi.setPaused(False, {"from": alice})
     assert multi.paused() is False
 
+
 # Only fire the pause event when the state changes
 def test_only_fire_pause_event_on_state_change(multi, accounts, alice, chain):
-    tx = multi.setPaused(True, {'from': alice})
-    assert 'PauseChanged' in tx.events
+    tx = multi.setPaused(True, {"from": alice})
+    assert "PauseChanged" in tx.events
     chain.mine()
-    tx = multi.setPaused(True, {'from': alice})
-    assert 'PauseChanged' not in tx.events
+    tx = multi.setPaused(True, {"from": alice})
+    assert "PauseChanged" not in tx.events
+
 
 # Can contract be paused by a rando?
 @pytest.mark.parametrize("idx", range(1, 10))
