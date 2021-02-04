@@ -107,9 +107,7 @@ def mint_0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6(
 ) -> None:
     # Synth sBTC
     target_contract = Contract("0xDB91E4B3b6E19bF22E810C43273eae48C9037e74")
-    target_contract.issue(
-        target, amount, {"from": "0x778D2d3E3515e42573EB1e6a8d8915D4a22D9d54"}
-    )
+    target_contract.issue(target, amount, {"from": "0x778D2d3E3515e42573EB1e6a8d8915D4a22D9d54"})
 
 
 def mint_0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa(
@@ -123,9 +121,7 @@ def mint_0x674C6Ad92Fd080e4004b2312b45f796a192D27a0(
     token: MintableForkToken, target: str, amount: int
 ) -> None:
     # USDN
-    token.deposit(
-        target, amount, {"from": "0x90f85042533F11b362769ea9beE20334584Dcd7D"}
-    )
+    token.deposit(target, amount, {"from": "0x90f85042533F11b362769ea9beE20334584Dcd7D"})
 
 
 def mint_0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599(
