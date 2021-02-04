@@ -56,7 +56,6 @@ def issue(multi, reward_token, alice, bob, chain):
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
     _init_amount = reward_token.balanceOf(alice)
     chain.mine(timedelta=60)
-    assert multi.earned(alice, reward_token) > 0
     return _init_amount
 
 
