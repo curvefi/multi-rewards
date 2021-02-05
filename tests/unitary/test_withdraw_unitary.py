@@ -87,7 +87,7 @@ def test_different_reward_amounts(
     bob_init_reward_balance = reward_token.balanceOf(bob)
     bob_init_reward2_balance = reward_token2.balanceOf(bob)
 
-    bob_exit = multi.exit({"from": bob})
+    multi.exit({"from": bob})
 
     bob_final_base_balance = base_token.balanceOf(bob)
     bob_final_reward_balance = reward_token.balanceOf(bob)

@@ -106,6 +106,7 @@ def test_update_reward_duration(multi, reward_token, alice, chain):
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
     chain.mine(timedelta=100)
     multi.setRewardsDuration(reward_token, 1000, {"from": alice})
+    assert multi.rewardData(reward_token)["rewardsDuration"] == 1000
 
 
 # Does reward per token update?
@@ -127,15 +128,61 @@ def test_reward_creation_transfers_balance(multi, reward_token, alice):
     amount = reward_token.balanceOf(alice)
     reward_token.approve(multi, amount, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    multi.rewardData(reward_token)
     multi.notifyRewardAmount(reward_token, amount, {"from": alice})
     assert reward_token.balanceOf(alice) == 0
-    assert multi.balanceOf(alice) == amount
+    assert multi.rewardData(reward_token)["rewardRate"] == amount // 60
 
 
-# Fails on insufficient balance
+# Fail on insufficient balance
 def test_reward_fail_on_insufficient_balance(multi, reward_token, alice):
     amount = 10 ** 30
     reward_token.approve(multi, amount, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     with brownie.reverts():
         multi.notifyRewardAmount(reward_token, amount, {"from": alice})
+
+
+# Reward per duration accurate?  Should round off and return full amount
+def test_reward_per_duration(multi, reward_token, alice):
+    amount = 10 ** 15
+    reward_token.approve(multi, amount, {"from": alice})
+    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    multi.notifyRewardAmount(reward_token, amount, {"from": alice})
+    multi.getRewardForDuration(reward_token) == amount // 60 * 60
+
+
+# Does last reward time update?
+def test_last_time_reward_applicable(multi, reward_token, chain, alice):
+    amount = 10 ** 15
+
+    reward_token.approve(multi, amount, {"from": alice})
+    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    last_time = multi.lastTimeRewardApplicable(reward_token)
+    for i in range(5):
+        reward_token.approve(multi, amount, {"from": alice})
+        multi.notifyRewardAmount(reward_token, amount, {"from": alice})
+        chain.mine(timedelta=60)
+        curr_time = multi.lastTimeRewardApplicable(reward_token)
+        assert curr_time > last_time
+        last_time = curr_time
+
+
+# Can user retrieve reward after a time cycle?
+def test_get_reward(multi, reward_token, alice, issue, chain):
+    time = 10000
+    chain.mine(timedelta=time)
+    multi.getReward({"from": alice})
+    final_amount = reward_token.balanceOf(alice)
+    assert final_amount >= issue
+
+
+def test_rewards_division_by_zero(multi, reward_token, alice, chain):
+    reward_token.approve(multi, 10 ** 19, {"from": alice})
+    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
+    chain.mine(timedelta=100)
+    multi.setRewardsDuration(reward_token, 0, {"from": alice})
+    assert multi.rewardData(reward_token)["rewardsDuration"] == 0
+    with brownie.reverts("SafeMath: division by zero"):
+        multi.notifyRewardAmount(reward_token, 0)

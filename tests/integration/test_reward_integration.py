@@ -7,32 +7,11 @@ from hypothesis import settings
 
 
 # No user can modify reward
-@pytest.mark.parametrize("_id", range(5))
-@pytest.mark.parametrize("_id2", range(5))
-def test_reward_unmodifiable(multi, accounts, reward_token, _id, _id2):
+@pytest.mark.parametrize("id1", range(5))
+@pytest.mark.parametrize("id2", range(5))
+def test_reward_unmodifiable(multi, accounts, reward_token, id1, id2):
     with brownie.reverts():
-        multi.addReward(reward_token, accounts[_id], 3600, {"from": accounts[_id2]})
-
-
-# Does last reward time update?
-@given(_amt=strategy("uint256", max_value=(10 ** 16), exclude=0))
-def test_last_time_reward_applicable(multi, reward_token, chain, _amt, alice):
-    _last_time = multi.lastTimeRewardApplicable(reward_token)
-    for i in range(5):
-        multi.notifyRewardAmount(reward_token, _amt, {"from": alice})
-        chain.mine(timedelta=60)
-        _curr_time = multi.lastTimeRewardApplicable(reward_token)
-        assert _curr_time > _last_time
-        _last_time = _curr_time
-
-
-# Reward per duration accurate?  Should round off and return full amount
-@given(amount=strategy("uint256", max_value=(10 ** 17), exclude=0))
-def test_reward_per_duration(multi, reward_token, amount, alice):
-    reward_token.approve(multi, amount, {"from": alice})
-    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
-    multi.notifyRewardAmount(reward_token, amount, {"from": alice})
-    multi.getRewardForDuration(reward_token) == amount // 60 * 60
+        multi.addReward(reward_token, accounts[id1], 3600, {"from": accounts[id2]})
 
 
 # Multiple tests for calculating correct multicoin reward amounts
@@ -94,15 +73,6 @@ def test_multiple_reward_earnings_act(
     assert calc_earnings2 == act_earnings2
 
 
-# Can user retrieve reward after a time cycle?
-@given(time=strategy("uint256", max_value=31557600, min_value=60))
-def test_get_reward(multi, reward_token, alice, issue, chain, time):
-    chain.mine(timedelta=time)
-    multi.getReward({"from": alice})
-    final_amount = reward_token.balanceOf(alice)
-    assert final_amount >= issue
-
-
 # Reward per token accurate?
 @given(amount=strategy("uint256", max_value=(10 ** 18), exclude=0))
 def test_reward_per_token(multi, alice, bob, reward_token, amount, chain, base_token):
@@ -146,3 +116,24 @@ def test_rewards_update(multi, alice, reward_token, amount, chain, base_token):
         assert last["periodFinish"] < curr["periodFinish"]
         assert last["lastUpdateTime"] < curr["lastUpdateTime"]
         assert last["rewardPerTokenStored"] < curr["rewardPerTokenStored"]
+
+
+@given(amount=strategy("uint256", min_value=0, max_value=1e77, exclude=0))
+def test_multiplication_overflow(multi, reward_token, base_token, alice, chain, amount):
+    base_token._mint_for_testing(alice, amount)
+    base_token.approve(multi, amount, {"from": alice})
+    multi.stake(amount, {"from": alice})
+
+    reward_token._mint_for_testing(alice, amount)
+    reward_token.approve(multi, amount, {"from": alice})
+    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
+    multi.notifyRewardAmount(reward_token, amount, {"from": alice})
+
+    chain.mine(timedelta=60)
+    if amount < 1.157973e59:
+        tot = multi.earned(alice, reward_token)
+        assert tot >= (60 * multi.rewardData(reward_token)["rewardRate"]) * 0.99
+        assert tot <= (60 * multi.rewardData(reward_token)["rewardRate"]) * 1.01
+    else:
+        with brownie.reverts("SafeMath: multiplication overflow"):
+            tot = multi.earned(alice, reward_token)
