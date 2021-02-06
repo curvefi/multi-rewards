@@ -4,11 +4,6 @@ import brownie
 from brownie_tokens.template import ERC20
 
 
-# Starting balance for owner is zero
-def test_initial_stake_is_zero(multi, accounts, alice):
-    assert multi.balanceOf(alice) == 0
-
-
 # Cannot stake zero
 def test_cannot_stake_zero(multi, alice):
     with brownie.reverts():
@@ -40,7 +35,17 @@ def test_n_rewards(multi, accounts, alice, base_token, chain):
     for i in range(5):
         assert multi.earned(accounts[i], _tokens[i]) > 0
 
+# Ensure total supply and balance transfer from caller to contract
+def test_supply_balance_updates(multi, base_token, alice):
+    amount = 10 ** 10
+    init_val = base_token.balanceOf(alice)
+    multi.stake(amount, {"from": alice})
+    assert base_token.balanceOf(alice) == init_val - amount
+    assert multi.balanceOf(alice) == amount
+    assert multi.totalSupply() == amount
 
-# Does reward for duration get updated?
-def test_reward_duration_updates(multi, reward_token, issue):
-    assert multi.getRewardForDuration(reward_token) > 0
+
+# Call reverts on insufficient token balance
+def test_staking_reverts_on_balance(multi, base_token, alice):
+    with brownie.reverts():
+        multi.stake(base_token.balanceOf(alice)+1, {'from': alice})

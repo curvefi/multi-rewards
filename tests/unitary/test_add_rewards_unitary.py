@@ -27,3 +27,11 @@ def test_rewards_properties_set(multi, alice, bob):
     multi.addReward(token, alice, 60, {'from': alice})
     assert multi.rewardData(token)['rewardsDuration'] == 60
     assert multi.rewardData(token)['rewardsDistributor'] == alice
+
+
+# Reward Per Token works with No Supply 
+def test_reward_per_token_zero_supply(multi, alice):
+    token = ERC20()
+    multi.addReward(token, alice, 60, {'from': alice})
+    assert multi.rewardPerToken(token) == 0
+
