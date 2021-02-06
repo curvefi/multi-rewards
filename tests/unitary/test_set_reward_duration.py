@@ -45,10 +45,12 @@ def test_update_reward_duration(multi, reward_token, alice, chain, issue):
     assert multi.rewardData(reward_token)["rewardsDuration"] == 1000
 
 
-# Does not interfere with other rewards 
-def test_update_reward_duration_noninterference(multi, reward_token, alice, chain, issue, slow_token):
-    reward_length = multi.rewardData(reward_token)['rewardsDuration']
-    slow_length = multi.rewardData(slow_token)['rewardsDuration']
+# Does not interfere with other rewards
+def test_update_reward_duration_noninterference(
+    multi, reward_token, alice, chain, issue, slow_token
+):
+    reward_length = multi.rewardData(reward_token)["rewardsDuration"]
+    slow_length = multi.rewardData(slow_token)["rewardsDuration"]
     assert reward_length > 0
     assert slow_length > 0
 
@@ -57,5 +59,3 @@ def test_update_reward_duration_noninterference(multi, reward_token, alice, chai
 
     assert multi.rewardData(reward_token)["rewardsDuration"] == 10000
     assert multi.rewardData(slow_token)["rewardsDuration"] == slow_length
-
-

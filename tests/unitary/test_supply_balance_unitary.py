@@ -1,7 +1,7 @@
 ##!/usr/bin/python3
 
-import brownie
 import pytest
+
 
 # Initial accounts at zero
 @pytest.mark.parametrize("idx", range(5))
@@ -32,6 +32,7 @@ def test_no_initial_earnings_bob(multi, reward_token, bob):
 # No charlie earnings at start
 def test_no_initial_earnings_charlie(multi, reward_token, charlie):
     assert multi.earned(charlie, reward_token) == 0
+
 
 # Ensure total supply and balance update correctly
 def test_supply_balance_updates(multi, reward_token, alice):

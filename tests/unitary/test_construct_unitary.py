@@ -51,6 +51,3 @@ def test_cannot_accept_unassigned_ownership(multi, accounts, bob):
     phrase = "You must be nominated before you can accept ownership"
     with brownie.reverts(phrase):
         multi.acceptOwnership({"from": bob})
-
-
-

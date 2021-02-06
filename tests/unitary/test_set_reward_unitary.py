@@ -23,7 +23,7 @@ def test_owner_cannot_modify_reward(multi, reward_token, alice):
 def test_set_rewards_distributor(multi, reward_token, alice, bob):
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     assert multi.rewardData(reward_token)[0] == bob
-    
+
 
 # Are owners able to update reward notification?
 def test_owner_notify_reward_amount(multi, reward_token, alice):
@@ -41,7 +41,6 @@ def test_unassigned_owner_cannot_update(multi, reward_token, alice, bob):
         multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})
 
 
-
 # Random users should not be able to access notifyRewardAmount
 def test_rando_notify_reward_amount(multi, reward_token, alice, bob, charlie):
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
@@ -49,7 +48,7 @@ def test_rando_notify_reward_amount(multi, reward_token, alice, bob, charlie):
         multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": charlie})
 
 
-# Ex-distributor should not be able to set 
+# Ex-distributor should not be able to set
 def test_ex_distributor_cannot_set(multi, reward_token, alice, bob, charlie):
     multi.setRewardsDistributor(reward_token, charlie, {"from": alice})
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
@@ -62,8 +61,8 @@ def test_cannot_update_other_tokens(multi, reward_token, reward_token2, alice, b
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     multi.setRewardsDistributor(reward_token2, charlie, {"from": alice})
 
-    assert multi.rewardData(reward_token)['rewardsDistributor'] == bob
-    assert multi.rewardData(reward_token2)['rewardsDistributor'] == charlie
+    assert multi.rewardData(reward_token)["rewardsDistributor"] == bob
+    assert multi.rewardData(reward_token2)["rewardsDistributor"] == charlie
 
     with brownie.reverts():
         multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": alice})

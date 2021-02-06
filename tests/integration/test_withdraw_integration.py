@@ -4,7 +4,6 @@ import brownie
 from brownie.test import given, strategy
 
 
-
 # Make sure a user who has not staked cannot withdraw
 @given(amount=strategy("uint256", max_value=10 ** 25))
 def test_unstaked_cannot_withdraw(multi, bob, amount):

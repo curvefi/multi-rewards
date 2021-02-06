@@ -35,6 +35,7 @@ def test_n_rewards(multi, accounts, alice, base_token, chain):
     for i in range(5):
         assert multi.earned(accounts[i], _tokens[i]) > 0
 
+
 # Ensure total supply and balance transfer from caller to contract
 def test_supply_balance_updates(multi, base_token, alice):
     amount = 10 ** 10
@@ -48,4 +49,4 @@ def test_supply_balance_updates(multi, base_token, alice):
 # Call reverts on insufficient token balance
 def test_staking_reverts_on_balance(multi, base_token, alice):
     with brownie.reverts():
-        multi.stake(base_token.balanceOf(alice)+1, {'from': alice})
+        multi.stake(base_token.balanceOf(alice) + 1, {"from": alice})
