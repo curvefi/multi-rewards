@@ -88,14 +88,19 @@ def test_staked_tokens_multi_durations(
     assert base_token.balanceOf(charlie) == 0
     assert multi.balanceOf(charlie) == amount
 
-    for i in range(5):
+    for i in range(20):
         chain.mine(timedelta=30)
-        mine_timestamp = chain.time()
+
         reward_per_token = multi.rewardPerToken(reward_token)
+
         earned_calc = (
             amount * (reward_per_token - multi.userRewardPerTokenPaid(charlie, reward_token))
         ) // 10 ** 18
-
+    
+        adj_reward_per_token = reward_per_token + (multi.rewardData(reward_token)['rewardRate'] * (10 ** 18)) // multi.totalSupply()
+        earned_calc_1s = (
+            amount * (adj_reward_per_token - multi.userRewardPerTokenPaid(charlie, reward_token))
+        ) // 10 ** 18
         # Earned Staked + Unclaimed
         assert earned_calc == multi.earned(charlie, reward_token)
 
@@ -103,18 +108,26 @@ def test_staked_tokens_multi_durations(
         slow_earned_calc = (
             amount * (reward_per_slow_token - multi.userRewardPerTokenPaid(charlie, slow_token))
         ) // 10 ** 18
-        assert slow_earned_calc == multi.earned(charlie, slow_token)
 
+        adj_reward_per_slow_token = reward_per_slow_token + (multi.rewardData(slow_token)['rewardRate'] * (10 ** 18)) // multi.totalSupply()
+        slow_earned_calc_1s = (
+            amount * (adj_reward_per_slow_token - multi.userRewardPerTokenPaid(charlie, slow_token))
+        ) // 10 ** 18
+
+        assert slow_earned_calc == multi.earned(charlie, slow_token)
         multi.getReward({"from": charlie})
-        # Earned Claimed
+        reward_data_postcall = multi.rewardData(slow_token)
+
+        # Earned() after claim
         assert multi.earned(charlie, reward_token) == 0
-        if chain.time() == mine_timestamp:
-            assert reward_token.balanceOf(charlie) - reward_init_bal == earned_calc
-            assert slow_token.balanceOf(charlie) - slow_init_bal == slow_earned_calc
-        else:
-            assert reward_token.balanceOf(charlie) - reward_init_bal >= earned_calc
-            assert slow_token.balanceOf(charlie) - slow_init_bal >= slow_earned_calc
-            assert slow_token.balanceOf(charlie) - slow_init_bal <= slow_earned_calc * 1.05
+
+        
+        assert reward_token.balanceOf(charlie) - reward_init_bal in [earned_calc, earned_calc_1s] 
+        assert slow_token.balanceOf(charlie) - slow_init_bal in [slow_earned_calc, slow_earned_calc_1s]
+        #else:
+        #    assert reward_token.balanceOf(charlie) - reward_init_bal >= earned_calc
+        #    assert slow_token.balanceOf(charlie) - slow_init_bal >= slow_earned_calc
+        #    assert slow_token.balanceOf(charlie) - slow_init_bal <= slow_earned_calc * 1.05
 
         reward_init_bal = reward_token.balanceOf(charlie)
         slow_init_bal = slow_token.balanceOf(charlie)
