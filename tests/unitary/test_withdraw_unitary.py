@@ -18,7 +18,8 @@ def test_withdraw_multiples(multi, base_token, reward_token, alice, bob, charlie
     base_token.approve(multi, 10 * amount, {"from": charlie})
 
     # chain.mine(timedelta=1)
-    charlie_stake_timestamp = (multi.lastTimeRewardApplicable(reward_token),)
+    multi.stake(amount * 10, {'from': charlie})
+    charlie_stake_timestamp = multi.lastTimeRewardApplicable(reward_token)
 
     if charlie_stake_timestamp == bob_stake_timestamp:
         assert multi.earned(charlie, reward_token) // 10 == multi.earned(bob, reward_token)

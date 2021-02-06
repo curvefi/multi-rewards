@@ -32,14 +32,12 @@ def test_erc20_only_callable_owner(multi, reward_token, issue, alice, charlie):
 
 # Assigned distributor cannot recover
 def test_erc20_distributor_nonrecoverable(multi, reward_token, alice, bob):
-    reward_token.approve(multi, 10 ** 18, {"from": alice})
+    reward_token.approve(multi, 10 ** 18, {"from": bob})
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": bob})
 
     with brownie.reverts("Only the contract owner may perform this action"):
         multi.recoverERC20(reward_token, 10 ** 10, {"from": bob})
-    tx = multi.recoverERC20(reward_token, 10 ** 18, {"from": alice})
-    assert tx.event["Recovered"].values()[0] == reward_token
 
 
 # Can withdraw reward tokens
