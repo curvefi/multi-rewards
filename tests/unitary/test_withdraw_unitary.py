@@ -3,29 +3,10 @@
 import brownie
 
 
-# Does the ERC20 recovery function produce expected behavior?
-def test_recovery(multi, reward_token, alice, issue):
-    multi.recoverERC20(reward_token, 10 ** 10, {"from": alice})
-    _final_amount = reward_token.balanceOf(alice)
-    assert _final_amount == issue + (10 ** 10)
-
-
-# ERC20 function should fail on non-owner
-def test_recovery_onlyowner(multi, reward_token, alice, bob, chain, issue):
-    with brownie.reverts():
-        multi.recoverERC20(reward_token, 10 ** 10, {"from": bob})
-
-
-# Cannot withdraw the base token from ERC20 function
-def test_no_withdraw_staking_token(multi, base_token, alice):
-    with brownie.reverts():
-        multi.recoverERC20(base_token, 10 ** 10, {"from": alice})
-
-
 # Can user A and user B withdraw in correct proportion?
 def test_withdraw_multiples(multi, base_token, reward_token, alice, bob, charlie, chain):
     reward_token.approve(multi, 10 ** 16, {"from": alice})
-    
+
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
 
@@ -36,14 +17,13 @@ def test_withdraw_multiples(multi, base_token, reward_token, alice, bob, charlie
 
     base_token.approve(multi, 10 * amount, {"from": charlie})
 
-    #chain.mine(timedelta=1)
-    tx_log = multi.stake(10 * amount, {"from": charlie})
-    charlie_stake_timestamp = multi.lastTimeRewardApplicable(reward_token),
-    
+    # chain.mine(timedelta=1)
+    charlie_stake_timestamp = (multi.lastTimeRewardApplicable(reward_token),)
+
     if charlie_stake_timestamp == bob_stake_timestamp:
         assert multi.earned(charlie, reward_token) // 10 == multi.earned(bob, reward_token)
     else:
-        assert multi.earned(charlie, reward_token) // 10 <= multi.earned(bob, reward_token) 
+        assert multi.earned(charlie, reward_token) // 10 <= multi.earned(bob, reward_token)
     assert multi.balanceOf(charlie) // 10 == multi.balanceOf(bob)
 
     bob_init_base_balance = base_token.balanceOf(bob)
@@ -83,7 +63,7 @@ def test_different_reward_amounts(
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
     first_reward_timestamp = multi.lastTimeRewardApplicable(reward_token)
 
-    #chain.mine(timedelta=1)
+    # chain.mine(timedelta=1)
     reward_token2.approve(multi, 10 ** 18, {"from": alice})
     multi.setRewardsDistributor(reward_token2, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token2, 10 ** 14, {"from": alice})
@@ -97,7 +77,6 @@ def test_different_reward_amounts(
         assert multi.earned(bob, reward_token) // 10000 == multi.earned(bob, reward_token2) // 1000
     else:
         assert multi.earned(bob, reward_token) >= multi.earned(bob, reward_token2)
-
 
     bob_init_base_balance = base_token.balanceOf(bob)
     bob_init_reward_balance = reward_token.balanceOf(bob)
@@ -118,3 +97,44 @@ def test_different_reward_amounts(
     else:
         assert bob_final_reward2_gain // 1000 >= bob_final_reward_gain // 10000
     assert bob_final_base_gain == amount
+
+
+# Can the owner stake and then withdraw?
+def test_owner_withdraw(multi, alice, base_token):
+    amount = base_token.balanceOf(alice)
+    multi.stake(amount, {"from": alice})
+    multi.withdraw(amount, {"from": alice})
+    assert multi.balanceOf(alice) == 0
+    assert base_token.balanceOf(alice) == amount
+
+
+# Cannot withdraw 0
+def test_cannot_withdraw_zero(multi, charlie):
+    assert multi.balanceOf(charlie) == 0
+    with brownie.reverts():
+        multi.withdraw(1, {"from": charlie})
+
+
+# Cannot withdraw more than deposit
+def test_cannot_withdraw_more_than_deposit(multi, alice, base_token):
+    amount = base_token.balanceOf(alice)
+    multi.stake(amount, {"from": alice})
+
+    with brownie.reverts():
+        multi.withdraw(1 + amount, {"from": alice})
+
+
+# Supply and balance change on withdraw
+def test_supply_balance_changes_on_withdraw(multi, alice, base_token):
+    amount = base_token.balanceOf(alice)
+    multi.stake(amount, {"from": alice})
+    init_supply = multi.totalSupply()
+    init_balance = multi.balanceOf(alice)
+    withdraw_amount = amount // 3
+    multi.withdraw(withdraw_amount, {"from": alice})
+    assert multi.totalSupply() == init_supply - withdraw_amount
+    assert multi.balanceOf(alice) == init_balance - withdraw_amount
+    assert base_token.balanceOf(alice) == withdraw_amount
+
+
+# -call reverts when attempting to withdraw > the user's balance

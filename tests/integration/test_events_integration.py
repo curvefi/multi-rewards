@@ -67,6 +67,7 @@ def test_rewards_duration_fires(multi, alice, reward_token, duration):
 
 # Does the Recovered event fire?
 @given(amount=strategy("uint256", max_value=(10 ** 10), exclude=0))
-def test_recovered_fires(multi, alice, reward_token, issue, amount):
+def test_recovered_fires(multi, alice, reward_token, issue, amount, chain):
+    chain.mine(timedelta=60)
     tx = multi.recoverERC20(reward_token, amount, {"from": alice})
     assert tx.events["Recovered"].values()[0] == reward_token
