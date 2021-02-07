@@ -40,16 +40,25 @@ def test_erc20_distributor_nonrecoverable(multi, reward_token, alice, bob):
         multi.recoverERC20(reward_token, 10 ** 10, {"from": bob})
 
 
-# Can withdraw reward tokens
-def test_erc20_withdrawable(multi, reward_token, alice, bob):
+# Only contract owner can withdraws
+def test_erc20_only_owner_withdrawable(multi, reward_token, alice, bob):
     multi.setRewardsDistributor(reward_token, bob, {"from": alice})
     reward_token.approve(multi, 10 ** 10, {"from": bob})
     multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": bob})
 
     with brownie.reverts("Only the contract owner may perform this action"):
         multi.recoverERC20(reward_token, 10 ** 10, {"from": bob})
+
+
+# Can withdraw reward tokens
+def test_erc20_withdrawable(multi, reward_token, alice, bob):
+    multi.setRewardsDistributor(reward_token, bob, {"from": alice})
+    reward_token.approve(multi, 10 ** 10, {"from": bob})
+    multi.notifyRewardAmount(reward_token, 10 ** 10, {"from": bob})
+
     tx = multi.recoverERC20(reward_token, 10 ** 18, {"from": alice})
     assert tx.events["Recovered"].values()[0] == reward_token
+
 
 
 # Can be used to withdraw random tokens
@@ -62,11 +71,21 @@ def test_transfer_random_tokens(multi, alice):
     assert random_token.balanceOf(alice) == 10 ** 18
 
 
-# Fail on nonexistent tokens
-def test_fail_nonexistent_tokens(multi, alice):
+# Fail on token not assigned
+def test_fail_random_tokens(multi, alice):
     random_token = ERC20()
     random_token._mint_for_testing(alice, 10 ** 18, {"from": alice})
     with brownie.reverts():
         multi.recoverERC20(random_token, 10 ** 18, {"from": alice})
+
+
+# Fail on nonexistent token
+def test_fail_nonexistent_tokens_with_amount(multi, alice):
+    with brownie.reverts():
         multi.recoverERC20(None, 10 ** 18, {"from": alice})
+
+
+# Fail on nonexistent tokens no amount
+def test_fail_nonexistent_tokens_without_amount(multi, alice):
+    with brownie.reverts():
         multi.recoverERC20(None, None, {"from": alice})
