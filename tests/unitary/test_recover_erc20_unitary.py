@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import brownie
+
 from brownie_tokens.template import ERC20
 
 
@@ -58,7 +59,6 @@ def test_erc20_withdrawable(multi, reward_token, alice, bob):
 
     tx = multi.recoverERC20(reward_token, 10 ** 18, {"from": alice})
     assert tx.events["Recovered"].values()[0] == reward_token
-
 
 
 # Can be used to withdraw random tokens

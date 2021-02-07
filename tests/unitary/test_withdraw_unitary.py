@@ -12,9 +12,9 @@ def test_withdraw_multiples(multi, base_token, slow_token, bob, charlie, chain):
     base_token.approve(multi, amount, {"from": bob})
     multi.stake(amount, {"from": bob})
     base_token.approve(multi, 10 * amount, {"from": charlie})
-    multi.stake(amount * 10, {'from': charlie})
+    multi.stake(amount * 10, {"from": charlie})
 
-    chain.mine(timedelta=60*60)
+    chain.mine(timedelta=60 * 60)
     earn_c = multi.earned(charlie, slow_token)
     earn_b = multi.earned(bob, slow_token)
 
@@ -39,10 +39,14 @@ def test_withdraw_multiples(multi, base_token, slow_token, bob, charlie, chain):
 
     assert earn_b > 0
     assert earn_c > 0
-    assert earn_b * .99 <= earn_c // 10 <= earn_b * 1.01
+    assert earn_b * 0.99 <= earn_c // 10 <= earn_b * 1.01
     assert multi.balanceOf(charlie) // 10 == multi.balanceOf(bob)
     assert charlie_exit_val // 10 == bob_exit_val
-    assert bob_final_reward_gain * .99 <= charlie_final_reward_gain // 10 <= bob_final_reward_gain * 1.01
+    assert (
+        bob_final_reward_gain * 0.99
+        <= charlie_final_reward_gain // 10
+        <= bob_final_reward_gain * 1.01
+    )
     assert charlie_final_base_gain // 10 == bob_final_base_gain
 
 
@@ -55,12 +59,10 @@ def test_different_reward_amounts(
     reward_token.approve(multi, 10 ** 15, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
-    first_reward_timestamp = multi.lastTimeRewardApplicable(reward_token)
 
     reward_token2.approve(multi, 10 ** 18, {"from": alice})
     multi.setRewardsDistributor(reward_token2, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token2, 10 ** 14, {"from": alice})
-    second_reward_timestamp = multi.lastTimeRewardApplicable(reward_token2)
 
     base_token.approve(multi, amount, {"from": bob})
     multi.stake(amount, {"from": bob})
@@ -84,8 +86,8 @@ def test_different_reward_amounts(
     final_reward_gain = final_reward_balance - init_reward_balance
     final_reward2_gain = final_reward2_balance - init_reward2_balance
 
-    assert reward_2_earnings * .99 <= reward_1_earnings // 10 <= reward_2_earnings * 1.01
-    assert final_reward2_gain <= final_reward_gain // 10 <= final_reward2_gain * 1.01 
+    assert reward_2_earnings * 0.99 <= reward_1_earnings // 10 <= reward_2_earnings * 1.01
+    assert final_reward2_gain <= final_reward_gain // 10 <= final_reward2_gain * 1.01
     assert final_base_gain == amount
 
 
@@ -125,4 +127,3 @@ def test_supply_balance_changes_on_withdraw(multi, alice, base_token):
     assert multi.totalSupply() == init_supply - withdraw_amount
     assert multi.balanceOf(alice) == init_balance - withdraw_amount
     assert base_token.balanceOf(alice) == withdraw_amount
-
