@@ -80,12 +80,12 @@ def test_fail_random_tokens(multi, alice):
 
 
 # Fail on nonexistent token
-def test_fail_nonexistent_tokens_with_amount(multi, alice):
+def test_fail_nonexistent_tokens_with_amount(multi, alice, accounts):
     with brownie.reverts():
-        multi.recoverERC20(None, 10 ** 18, {"from": alice})
+        multi.recoverERC20(accounts[0], 10 ** 18, {"from": alice})
 
 
 # Fail on nonexistent tokens no amount
-def test_fail_nonexistent_tokens_without_amount(multi, alice):
+def test_fail_nonexistent_tokens_without_amount(multi, alice, accounts):
     with brownie.reverts():
-        multi.recoverERC20(None, None, {"from": alice})
+        multi.recoverERC20(accounts[0], 0, {"from": alice})
