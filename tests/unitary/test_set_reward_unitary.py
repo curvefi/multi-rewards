@@ -163,7 +163,7 @@ def test_last_time_reward_applicable(multi, reward_token, chain, alice):
         last_time = curr_time
 
 
-def test_cannot_set_duration_zero(multi, reward_token, alice, chain);
+def test_cannot_set_duration_zero(multi, reward_token, alice, chain):
     reward_token.approve(multi, 10 ** 19, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
