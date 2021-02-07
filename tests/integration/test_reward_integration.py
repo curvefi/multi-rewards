@@ -118,7 +118,7 @@ def test_rewards_update(multi, alice, reward_token, amount, chain, base_token):
         assert last["rewardPerTokenStored"] < curr["rewardPerTokenStored"]
 
 
-@pytest.mark.parametrize('amount', [1, 1e50, 1.156e59])
+@pytest.mark.parametrize("amount", [1, 1e50, 1.156e59])
 def test_no_multiplication_overflow(multi, reward_token, base_token, alice, chain, amount):
     base_token._mint_for_testing(alice, amount)
     base_token.approve(multi, amount, {"from": alice})
@@ -135,7 +135,7 @@ def test_no_multiplication_overflow(multi, reward_token, base_token, alice, chai
     assert tot <= (60 * multi.rewardData(reward_token)["rewardRate"]) * 1.01
 
 
-@pytest.mark.parametrize('amount', [1.158e59, 1e70])
+@pytest.mark.parametrize("amount", [1.158e59, 1e70])
 def test_multiplication_overflow(multi, reward_token, base_token, alice, chain, amount):
     base_token._mint_for_testing(alice, amount)
     base_token.approve(multi, amount, {"from": alice})
@@ -148,4 +148,4 @@ def test_multiplication_overflow(multi, reward_token, base_token, alice, chain, 
 
     chain.mine(timedelta=60)
     with brownie.reverts("SafeMath: multiplication overflow"):
-        tot = multi.earned(alice, reward_token)
+        multi.earned(alice, reward_token)
