@@ -122,9 +122,6 @@ def test_staked_tokens_multi_durations(
     amount = base_token.balanceOf(charlie)
     base_token.approve(multi, amount, {"from": charlie})
     multi.stake(amount, {"from": charlie})
-    reward_rate = multi.rewardData(reward_token)["rewardRate"]
-    slow_reward_rate = multi.rewardData(slow_token)["rewardRate"]
-    total_supply = multi.totalSupply()
 
     for i in range(1):
         reward_init_bal = reward_token.balanceOf(charlie)
@@ -132,22 +129,22 @@ def test_staked_tokens_multi_durations(
         charlie_paid_reward = multi.userRewardPerTokenPaid(charlie, reward_token)
         charlie_paid_slow = multi.userRewardPerTokenPaid(charlie, slow_token)
         chain.mine(timedelta=30)
-        
+
         reward_per = multi.rewardPerToken(reward_token)
         slow_per = multi.rewardPerToken(slow_token)
-        reward_calc = (amount * (reward_per - charlie_paid_reward)) // 10**18 
-        slow_calc = (amount * (slow_per - charlie_paid_slow)) // 10**18 
+        reward_calc = (amount * (reward_per - charlie_paid_reward)) // 10 ** 18
+        slow_calc = (amount * (slow_per - charlie_paid_slow)) // 10 ** 18
 
         assert reward_calc == multi.earned(charlie, reward_token)
         assert slow_calc == multi.earned(charlie, slow_token)
 
-        multi.getReward({"from": charlie})  
+        multi.getReward({"from": charlie})
 
         # Reward may have changed in the second it takes to getReward
         reward_per_act = multi.rewardPerToken(reward_token)
         slow_per_act = multi.rewardPerToken(slow_token)
-        reward_calc_act = (amount * (reward_per_act - charlie_paid_reward)) // 10**18 
-        slow_calc_act = (amount * (slow_per_act - charlie_paid_slow)) // 10**18 
+        reward_calc_act = (amount * (reward_per_act - charlie_paid_reward)) // 10 ** 18
+        slow_calc_act = (amount * (slow_per_act - charlie_paid_slow)) // 10 ** 18
 
         assert reward_token.balanceOf(charlie) - reward_init_bal == reward_calc_act
         assert slow_token.balanceOf(charlie) - slow_init_bal == slow_calc_act
@@ -176,8 +173,8 @@ def test_withdrawn_user_can_claim(multi, slow_token, base_token, alice, charlie,
 
     # Does Charlie still get rewarded?
     tx = multi.getReward({"from": charlie})
-    for e in tx.events['RewardPaid']:
-        if e['user'] == charlie and e['rewardsToken'] == slow_token:
+    for e in tx.events["RewardPaid"]:
+        if e["user"] == charlie and e["rewardsToken"] == slow_token:
             token_log = e
-    assert token_log['reward'] == earned_calc
+    assert token_log["reward"] == earned_calc
     assert slow_token.balanceOf(charlie) - reward_init_bal == earned_calc

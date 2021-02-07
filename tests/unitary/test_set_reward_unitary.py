@@ -172,7 +172,7 @@ def test_cannot_set_duration_zero(multi, reward_token, alice, chain):
         multi.setRewardsDuration(reward_token, 0, {"from": alice})
 
 
-#def test_rewards_division_by_zero(multi, reward_token, alice, chain):
+# def test_rewards_division_by_zero(multi, reward_token, alice, chain):
 #    reward_token.approve(multi, 10 ** 19, {"from": alice})
 #    multi.setRewardsDistributor(reward_token, alice, {"from": alice})
 #    multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
