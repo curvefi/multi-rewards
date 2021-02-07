@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pytest
 
 # Can user retrieve reward after a time cycle?
 def test_get_reward(multi, base_token, reward_token, alice, issue, chain):
@@ -69,6 +70,44 @@ def test_staked_token_value(multi, reward_token, base_token, alice, charlie, iss
     assert reward_token.balanceOf(charlie) - reward_init_bal == earned_calc
 
 
+# User at outset has no earnings
+def test_fresh_user_no_earnings(multi, reward_token, charlie, issue):
+    assert multi.earned(charlie, reward_token) == 0
+ 
+# User has no earnings after staking
+def test_no_earnings_upon_staking(multi, reward_token, base_token, charlie, issue):
+    amount = base_token.balanceOf(charlie)
+    base_token.approve(multi, amount, {"from": charlie})
+    multi.stake(amount, {"from": charlie})
+    assert multi.earned(charlie, reward_token) == 0
+
+
+# User has earnings after staking and waiting
+def test_user_accrues_rewards(multi, reward_token, base_token, charlie, issue, chain):
+    amount = base_token.balanceOf(charlie)
+    base_token.approve(multi, amount,  {"from": charlie})
+    multi.stake(amount, {"from": charlie})
+    chain.mine(timedelta=60)
+    period = multi.lastTimeRewardApplicable(reward_token) - multi.rewardData(reward_token)['lastUpdateTime']
+    calc_earn = period * (10 ** 18 / 60 )
+    assert calc_earn* 0.99 <= multi.earned(charlie, reward_token) <= calc_earn * 1.01 
+
+
+# User has no earnings after withdrawing
+def test_no_earnings_post_withdrawal(
+    multi, reward_token, slow_token, base_token, alice, charlie, issue, chain
+):
+    amount = base_token.balanceOf(charlie)
+    base_token.approve(multi, amount,  {"from": charlie})
+    multi.stake(amount, {"from": charlie})
+    chain.mine(timedelta=30)
+    assert multi.earned(charlie, reward_token) > 0
+    multi.getReward({"from": charlie})
+    multi.withdraw(multi.balanceOf(charlie), {"from": charlie})
+    chain.mine(timedelta=30)
+    assert multi.earned(charlie, reward_token) == 0
+
+
 # Call from a user who is staked should receive the correct amount of tokens
 # Also confirm earnings at various stages
 def test_staked_tokens_multi_durations(
@@ -77,16 +116,9 @@ def test_staked_tokens_multi_durations(
     reward_init_bal = reward_token.balanceOf(charlie)
     slow_init_bal = slow_token.balanceOf(charlie)
 
-    # Earned Unstaked
-    assert multi.earned(charlie, reward_token) == 0
     amount = base_token.balanceOf(charlie)
     base_token.approve(multi, amount, {"from": charlie})
     multi.stake(amount, {"from": charlie})
-
-    # Earned Staked + No Action
-    assert multi.earned(charlie, reward_token) == 0
-    assert base_token.balanceOf(charlie) == 0
-    assert multi.balanceOf(charlie) == amount
 
     for i in range(20):
         chain.mine(timedelta=30)
@@ -101,8 +133,6 @@ def test_staked_tokens_multi_durations(
         earned_calc_1s = (
             amount * (adj_reward_per_token - multi.userRewardPerTokenPaid(charlie, reward_token))
         ) // 10 ** 18
-        # Earned Staked + Unclaimed
-        assert earned_calc == multi.earned(charlie, reward_token)
 
         reward_per_slow_token = multi.rewardPerToken(slow_token)
         slow_earned_calc = (
@@ -114,26 +144,15 @@ def test_staked_tokens_multi_durations(
             amount * (adj_reward_per_slow_token - multi.userRewardPerTokenPaid(charlie, slow_token))
         ) // 10 ** 18
 
-        assert slow_earned_calc == multi.earned(charlie, slow_token)
         multi.getReward({"from": charlie})
         reward_data_postcall = multi.rewardData(slow_token)
 
-        # Earned() after claim
-        assert multi.earned(charlie, reward_token) == 0
-
-        
         assert reward_token.balanceOf(charlie) - reward_init_bal in [earned_calc, earned_calc_1s] 
         assert slow_token.balanceOf(charlie) - slow_init_bal in [slow_earned_calc, slow_earned_calc_1s]
-        #else:
-        #    assert reward_token.balanceOf(charlie) - reward_init_bal >= earned_calc
-        #    assert slow_token.balanceOf(charlie) - slow_init_bal >= slow_earned_calc
-        #    assert slow_token.balanceOf(charlie) - slow_init_bal <= slow_earned_calc * 1.05
 
         reward_init_bal = reward_token.balanceOf(charlie)
         slow_init_bal = slow_token.balanceOf(charlie)
 
-    multi.withdraw(multi.balanceOf(charlie), {"from": charlie})
-    assert multi.earned(charlie, reward_token) == 0
 
 
 # A user that has withdrawn should still be able to claim their rewards
@@ -147,6 +166,7 @@ def test_withdrawn_user_can_claim(multi, reward_token, base_token, alice, charli
 
     chain.mine(timedelta=60)
     reward_per_token = multi.rewardPerToken(reward_token)
+    assert reward_per_token > 0
     earned_calc = reward_per_token * amount // 10 ** 18
     assert earned_calc == multi.earned(charlie, reward_token)
 

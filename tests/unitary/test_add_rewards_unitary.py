@@ -9,6 +9,11 @@ def test_only_owner_can_call(multi, alice, bob):
     token = ERC20()
     with brownie.reverts("Only the contract owner may perform this action"):
         multi.addReward(token, alice, 60, {"from": bob})
+
+
+# Owner can add reward token
+def test_owner_can_add_reward_token(multi, alice, bob):
+    token = ERC20()
     multi.addReward(token, alice, 60, {"from": alice})
     assert multi.rewardTokens(0) == token
 
