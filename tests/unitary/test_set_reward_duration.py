@@ -16,7 +16,8 @@ def test_reward_duration_updates(multi, reward_token, issue):
 
 # Only callable by distributor (will fail because of onlyOwner modifier)
 @pytest.mark.skip_coverage
-def test_reward_duration_only_distributor(multi, bob_token, alice, bob, charlie):
+def test_reward_duration_only_distributor(multi, bob_token, alice, bob, charlie, chain):
+    chain.mine(timedelta=100)
     with brownie.reverts():
         multi.setRewardsDuration(bob_token, 10000, {"from": alice})
     with brownie.reverts():
@@ -39,15 +40,15 @@ def test_reward_period_finish(multi, reward_token, alice):
 
 
 # Can set duration after end
-def test_update_reward_duration(multi, reward_token, alice, chain, issue):
+def test_update_reward_duration(multi, reward_token, bob, chain, issue):
     chain.mine(timedelta=100)
-    multi.setRewardsDuration(reward_token, 1000, {"from": alice})
+    multi.setRewardsDuration(reward_token, 1000, {"from": bob})
     assert multi.rewardData(reward_token)["rewardsDuration"] == 1000
 
 
 # Does not interfere with other rewards
 def test_update_reward_duration_noninterference(
-    multi, reward_token, alice, chain, issue, slow_token
+    multi, reward_token, bob, chain, issue, slow_token
 ):
     reward_length = multi.rewardData(reward_token)["rewardsDuration"]
     slow_length = multi.rewardData(slow_token)["rewardsDuration"]
@@ -55,7 +56,7 @@ def test_update_reward_duration_noninterference(
     assert slow_length > 0
 
     chain.mine(timedelta=100)
-    multi.setRewardsDuration(reward_token, 10000, {"from": alice})
+    multi.setRewardsDuration(reward_token, 10000, {"from": bob})
 
     assert multi.rewardData(reward_token)["rewardsDuration"] == 10000
     assert multi.rewardData(slow_token)["rewardsDuration"] == slow_length
