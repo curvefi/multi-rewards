@@ -122,67 +122,59 @@ def test_staked_tokens_multi_durations(
     amount = base_token.balanceOf(charlie)
     base_token.approve(multi, amount, {"from": charlie})
     multi.stake(amount, {"from": charlie})
+    reward_rate = multi.rewardData(reward_token)["rewardRate"]
+    slow_reward_rate = multi.rewardData(slow_token)["rewardRate"]
+    total_supply = multi.totalSupply()
 
     for i in range(20):
-        chain.mine(timedelta=30)
-
-        reward_per_token = multi.rewardPerToken(reward_token)
-
-        earned_calc = (
-            amount * (reward_per_token - multi.userRewardPerTokenPaid(charlie, reward_token))
-        ) // 10 ** 18
-
-        adj_reward_per_token = (
-            reward_per_token
-            + (multi.rewardData(reward_token)["rewardRate"] * (10 ** 18)) // multi.totalSupply()
-        )
-        earned_calc_1s = (
-            amount * (adj_reward_per_token - multi.userRewardPerTokenPaid(charlie, reward_token))
-        ) // 10 ** 18
-
-        reward_per_slow_token = multi.rewardPerToken(slow_token)
-        slow_earned_calc = (
-            amount * (reward_per_slow_token - multi.userRewardPerTokenPaid(charlie, slow_token))
-        ) // 10 ** 18
-
-        adj_reward_per_slow_token = (
-            reward_per_slow_token
-            + (multi.rewardData(slow_token)["rewardRate"] * (10 ** 18)) // multi.totalSupply()
-        )
-        slow_earned_calc_1s = (
-            amount * (adj_reward_per_slow_token - multi.userRewardPerTokenPaid(charlie, slow_token))
-        ) // 10 ** 18
-
-        multi.getReward({"from": charlie})
-
-        assert reward_token.balanceOf(charlie) - reward_init_bal in [earned_calc, earned_calc_1s]
-        assert slow_token.balanceOf(charlie) - slow_init_bal in [
-            slow_earned_calc,
-            slow_earned_calc_1s,
-        ]
-
         reward_init_bal = reward_token.balanceOf(charlie)
         slow_init_bal = slow_token.balanceOf(charlie)
+        charlie_paid_reward = multi.userRewardPerTokenPaid(charlie, reward_token)
+        charlie_paid_slow = multi.userRewardPerTokenPaid(charlie, slow_token)
+        chain.mine(timedelta=30)
+        
+        reward_per = multi.rewardPerToken(reward_token)
+        slow_per = multi.rewardPerToken(slow_token)
+        reward_calc = (amount * (reward_per - charlie_paid_reward)) // 10**18 
+        slow_calc = (amount * (slow_per - charlie_paid_slow)) // 10**18 
+
+        assert reward_calc == multi.earned(charlie, reward_token)
+        assert slow_calc == multi.earned(charlie, slow_token)
+
+        multi.getReward({"from": charlie})  
+
+        # Reward may have changed in the second it takes to getReward
+        reward_per_act = multi.rewardPerToken(reward_token)
+        slow_per_act = multi.rewardPerToken(slow_token)
+        reward_calc_act = (amount * (reward_per_act - charlie_paid_reward)) // 10**18 
+        slow_calc_act = (amount * (slow_per_act - charlie_paid_slow)) // 10**18 
+
+        assert reward_token.balanceOf(charlie) - reward_init_bal == reward_calc_act
+        assert slow_token.balanceOf(charlie) - slow_init_bal == slow_calc_act
 
 
 # A user that has withdrawn should still be able to claim their rewards
-def test_withdrawn_user_can_claim(multi, reward_token, base_token, alice, charlie, issue, chain):
+def test_withdrawn_user_can_claim(multi, slow_token, base_token, alice, charlie, issue, chain):
     amount = base_token.balanceOf(charlie)
-    reward_init_bal = reward_token.balanceOf(charlie)
+    reward_init_bal = slow_token.balanceOf(charlie)
     base_token.approve(multi, amount, {"from": charlie})
     multi.stake(amount, {"from": charlie})
+
+    # Confirm charlie staked
     assert base_token.balanceOf(charlie) == 0
     assert multi.balanceOf(charlie) == amount
 
     chain.mine(timedelta=60)
-    reward_per_token = multi.rewardPerToken(reward_token)
-    assert reward_per_token > 0
-    earned_calc = reward_per_token * amount // 10 ** 18
-    assert earned_calc == multi.earned(charlie, reward_token)
-
     multi.withdraw(amount, {"from": charlie})
-    assert multi.balanceOf(charlie) == 0
 
+    # Confirm Charlie withdrew as expected
+    reward_per_token = multi.rewardPerToken(slow_token)
+    earned_calc = reward_per_token * amount // 10 ** 18
+    assert multi.balanceOf(charlie) == 0
+    assert reward_per_token > 0
+    assert earned_calc == multi.earned(charlie, slow_token)
+
+    # Does Charlie still get rewarded?
     tx = multi.getReward({"from": charlie})
     assert tx.events["RewardPaid"].values()[2] == earned_calc
-    assert reward_token.balanceOf(charlie) - reward_init_bal == earned_calc
+    assert slow_token.balanceOf(charlie) - reward_init_bal == earned_calc
