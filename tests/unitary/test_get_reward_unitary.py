@@ -126,7 +126,7 @@ def test_staked_tokens_multi_durations(
     slow_reward_rate = multi.rewardData(slow_token)["rewardRate"]
     total_supply = multi.totalSupply()
 
-    for i in range(20):
+    for i in range(1):
         reward_init_bal = reward_token.balanceOf(charlie)
         slow_init_bal = slow_token.balanceOf(charlie)
         charlie_paid_reward = multi.userRewardPerTokenPaid(charlie, reward_token)
@@ -176,5 +176,8 @@ def test_withdrawn_user_can_claim(multi, slow_token, base_token, alice, charlie,
 
     # Does Charlie still get rewarded?
     tx = multi.getReward({"from": charlie})
-    assert tx.events["RewardPaid"].values()[2] == earned_calc
+    for e in tx.events['RewardPaid']:
+        if e['user'] == charlie and e['rewardsToken'] == slow_token:
+            token_log = e
+    assert token_log['reward'] == earned_calc
     assert slow_token.balanceOf(charlie) - reward_init_bal == earned_calc

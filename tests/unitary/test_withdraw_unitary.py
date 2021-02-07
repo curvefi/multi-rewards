@@ -86,8 +86,8 @@ def test_different_reward_amounts(
     final_reward_gain = final_reward_balance - init_reward_balance
     final_reward2_gain = final_reward2_balance - init_reward2_balance
 
-    assert reward_2_earnings * 0.99 <= reward_1_earnings // 10 <= reward_2_earnings * 1.01
-    assert final_reward2_gain <= final_reward_gain // 10 <= final_reward2_gain * 1.01
+    assert reward_2_earnings * 0.98 <= reward_1_earnings // 10 <= reward_2_earnings * 1.02
+    assert final_reward2_gain * 0.98 <= final_reward_gain // 10 <= final_reward2_gain * 1.02
     assert final_base_gain == amount
 
 
