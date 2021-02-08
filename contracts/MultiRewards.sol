@@ -426,10 +426,6 @@ contract MultiRewards is ReentrancyGuard, Pausable {
 
     /* ========== VIEWS ========== */
 
-    function setRewardsDistributor(address _rewardsToken, address _rewardsDistributor) external onlyOwner {
-        rewardData[_rewardsToken].rewardsDistributor = _rewardsDistributor;
-    }
-
     function totalSupply() external view returns (uint256) {
         return _totalSupply;
     }
@@ -461,6 +457,10 @@ contract MultiRewards is ReentrancyGuard, Pausable {
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
+
+    function setRewardsDistributor(address _rewardsToken, address _rewardsDistributor) external onlyOwner {
+        rewardData[_rewardsToken].rewardsDistributor = _rewardsDistributor;
+    }
 
     function stake(uint256 amount) external nonReentrant notPaused updateReward(msg.sender) {
         require(amount > 0, "Cannot stake 0");
@@ -524,11 +524,13 @@ contract MultiRewards is ReentrancyGuard, Pausable {
         emit Recovered(tokenAddress, tokenAmount);
     }
 
-    function setRewardsDuration(address _rewardsToken, uint256 _rewardsDuration) external onlyOwner {
+    function setRewardsDuration(address _rewardsToken, uint256 _rewardsDuration) external {
         require(
             block.timestamp > rewardData[_rewardsToken].periodFinish,
             "Previous rewards period must be complete before changing the duration for the new period"
         );
+        require(rewardData[_rewardsToken].rewardsDistributor == msg.sender);
+        require(_rewardsDuration > 0, "Reward duration must be non-zero");
         rewardData[_rewardsToken].rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(_rewardsToken, rewardData[_rewardsToken].rewardsDuration);
     }
