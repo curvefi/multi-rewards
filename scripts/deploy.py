@@ -6,6 +6,7 @@ from brownie.network.gas.strategies import GasNowScalingStrategy
 # can be loaded via a keystore or private key, for more info see
 # https://eth-brownie.readthedocs.io/en/stable/account-management.html
 DEPLOYER = accounts.add()
+
 # the address that owns the contract and can call all restricted functions
 OWNER = DEPLOYER
 
@@ -25,7 +26,7 @@ def main():
     print(f"""Success!
 MultiRewards deployed to: {multi_rewards}
 Owner: {OWNER}
-Please verify the source code on Etherscan here: https://etherscan.io/verifyContract?a={rewards}
+Please verify the source code on Etherscan here: https://etherscan.io/verifyContract?a={multi_rewards}
 Compiler version: 0.5.17
 Optimization: ON
 """)

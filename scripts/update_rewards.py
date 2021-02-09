@@ -14,7 +14,7 @@ OWNER = accounts.add()
 REWARD_ADMIN = accounts.add()
 
 # amount to add as a reward
-REWARDS_AMOUNT = 10
+REWARDS_AMOUNT = 10 ** 19
 
 
 gas_strategy = GasNowScalingStrategy("standard", "fast")
@@ -40,5 +40,5 @@ def main():
     multi.notifyRewardAmount(reward, REWARDS_AMOUNT, {'from': REWARD_ADMIN, 'gas_price': gas_strategy})
 
     print(
-        f"Success! {REWARDS_AMOUNT/10**token.decimals():.2f} {token.symbol()} has been added"
+        f"Success! {REWARDS_AMOUNT/10**reward.decimals():.2f} {reward.symbol()} has been added"
     )
