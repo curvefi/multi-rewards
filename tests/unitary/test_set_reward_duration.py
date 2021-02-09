@@ -47,9 +47,7 @@ def test_update_reward_duration(multi, reward_token, bob, chain, issue):
 
 
 # Does not interfere with other rewards
-def test_update_reward_duration_noninterference(
-    multi, reward_token, bob, chain, issue, slow_token
-):
+def test_update_reward_duration_noninterference(multi, reward_token, bob, chain, issue, slow_token):
     reward_length = multi.rewardData(reward_token)["rewardsDuration"]
     slow_length = multi.rewardData(slow_token)["rewardsDuration"]
     assert reward_length > 0
