@@ -116,6 +116,15 @@ def test_cannot_withdraw_more_than_deposit(multi, alice, base_token):
         multi.withdraw(1 + amount, {"from": alice})
 
 
+def test_cannot_withdraw_more_than_deposit_if_balance_exists(multi, alice, bob, base_token):
+    amount = base_token.balanceOf(alice)
+    multi.stake(amount, {"from": alice})
+    base_token.approve(multi, amount, {"from": bob})
+    multi.stake(amount, {"from": bob})
+    with brownie.reverts("SafeMath: subtraction overflow"):
+        multi.withdraw(1 + amount, {"from": alice})
+
+
 # Supply and balance change on withdraw
 def test_supply_balance_changes_on_withdraw(multi, alice, base_token):
     amount = base_token.balanceOf(alice)
