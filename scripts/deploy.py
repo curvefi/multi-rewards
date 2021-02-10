@@ -1,6 +1,5 @@
-from brownie import Contract, MultiRewards, accounts
+from brownie import MultiRewards, accounts
 from brownie.network.gas.strategies import GasNowScalingStrategy
-
 
 # the address that will be used to deploy the contract
 # can be loaded via a keystore or private key, for more info see
@@ -25,7 +24,7 @@ def main():
         f"""Success!
 MultiRewards deployed to: {multi_rewards}
 Owner: {OWNER}
-Please verify the source code on Etherscan here: https://etherscan.io/verifyContract?a={multi_rewards}
+Please verify the source code here: https://etherscan.io/verifyContract?a={multi_rewards}
 Compiler version: 0.5.17
 Optimization: ON
 """
