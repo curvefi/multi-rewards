@@ -1,5 +1,8 @@
-from brownie import Contract, MultiRewards, accounts
+import datetime
+
+from brownie import Contract, MultiRewards, accounts, chain
 from brownie.network.gas.strategies import GasNowScalingStrategy
+
 
 # address of the MultiRewards contract
 MULTIREWARDS_CONTRACT_ADDRESS = "0x"
