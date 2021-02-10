@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import brownie
-
 from brownie_tokens.template import ERC20
 
 
