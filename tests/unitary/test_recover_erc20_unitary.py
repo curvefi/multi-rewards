@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import brownie
 from brownie_tokens.template import ERC20
 
@@ -90,9 +91,7 @@ def test_fail_nonexistent_tokens_without_amount(multi, alice, accounts):
 # Withdraw of reward token effect on claiming
 def test_no_withdraw_erc20_postreward(multi, alice, accounts, slow_token, base_token, chain):
     chain.mine(timedelta=60)
-    with brownie.reverts(
-        "Cannot withdraw tokens from this endpoint when a reward period is active"
-    ):
+    with brownie.reverts("Cannot withdraw during reward period"):
         multi.recoverERC20(slow_token, 10 ** 19, {"from": alice})
 
 
@@ -101,7 +100,5 @@ def test_withdraw_erc20_then_claim(multi, alice, bob, accounts, slow_token, base
     base_token.approve(multi, base_token.balanceOf(bob), {"from": bob})
     multi.stake(base_token.balanceOf(bob), {"from": bob})
     chain.mine(timedelta=60)
-    with brownie.reverts(
-        "Cannot withdraw tokens from this endpoint when a reward period is active"
-    ):
+    with brownie.reverts("Cannot withdraw during reward period"):
         multi.recoverERC20(slow_token, 10 ** 19, {"from": alice})
