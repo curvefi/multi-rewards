@@ -33,9 +33,7 @@ def test_reward_period_finish(multi, reward_token, alice):
     reward_token.approve(multi, 10 ** 18, {"from": alice})
     multi.setRewardsDistributor(reward_token, alice, {"from": alice})
     multi.notifyRewardAmount(reward_token, 10 ** 15, {"from": alice})
-    with brownie.reverts(
-        "Previous rewards period must be complete before changing the duration for the new period"
-    ):
+    with brownie.reverts("Reward period still active"):
         multi.setRewardsDuration(reward_token, 9999999, {"from": alice})
 
 
