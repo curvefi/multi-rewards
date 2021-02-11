@@ -519,8 +519,8 @@ contract MultiRewards is ReentrancyGuard, Pausable {
 
     // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
     function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-        require(tokenAddress != address(stakingToken), "Cannot withdraw the staking token");
-        require(rewardData[tokenAddress].lastUpdateTime == 0, "Cannot withdraw during reward period");
+        require(tokenAddress != address(stakingToken), "Cannot withdraw staking token");
+        require(rewardData[tokenAddress].lastUpdateTime == 0, "Cannot withdraw reward token");
         IERC20(tokenAddress).safeTransfer(owner, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
@@ -528,7 +528,7 @@ contract MultiRewards is ReentrancyGuard, Pausable {
     function setRewardsDuration(address _rewardsToken, uint256 _rewardsDuration) external {
         require(
             block.timestamp > rewardData[_rewardsToken].periodFinish,
-            "Previous rewards period must be complete before changing the duration for the new period"
+            "Reward period still active"
         );
         require(rewardData[_rewardsToken].rewardsDistributor == msg.sender);
         require(_rewardsDuration > 0, "Reward duration must be non-zero");
