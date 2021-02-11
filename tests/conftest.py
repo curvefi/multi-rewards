@@ -80,6 +80,18 @@ def bob_token(multi, reward_token, alice, bob, chain):
     return reward_token
 
 
+# Transfer a random token by err
+@pytest.fixture(scope="module")
+def err_token(multi, reward_token, alice, bob, chain):
+    err_token = ERC20()
+    amount = 10 ** 18
+    err_token._mint_for_testing(alice, amount, {"from": alice})
+    err_token.approve(multi, amount, {"from": alice})
+    err_token.transfer(multi, amount, {"from": alice})
+
+    return err_token
+
+
 # Hi Alice
 @pytest.fixture(scope="session")
 def alice(accounts):
