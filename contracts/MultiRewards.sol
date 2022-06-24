@@ -536,6 +536,48 @@ contract MultiRewards is ReentrancyGuard, Pausable {
         emit RewardsDurationUpdated(_rewardsToken, rewardData[_rewardsToken].rewardsDuration);
     }
 
+    function updateActiveRewardsDuration(address _rewardsToken, uint256 _rewardsDuration)
+        external
+        updateReward(address(0))
+    {
+        require(
+            rewardData[_rewardsToken].rewardsDistributor == msg.sender,
+            "Caller is not rewards distributor"
+        );
+        require(
+            block.timestamp < rewardData[_rewardsToken].periodFinish,
+            "Reward period not active"
+        );
+        require(_rewardsDuration > 0, "Reward duration must be non-zero");
+
+        uint256 currentDuration = rewardData[_rewardsToken].rewardsDuration;
+
+        uint256 oldRemaining = rewardData[_rewardsToken].periodFinish.sub(block.timestamp);
+
+        if (_rewardsDuration > currentDuration) {
+            rewardData[_rewardsToken].periodFinish = rewardData[_rewardsToken].periodFinish.add(
+                _rewardsDuration.sub(currentDuration)
+            );
+        } else {
+            rewardData[_rewardsToken].periodFinish = rewardData[_rewardsToken].periodFinish.sub(
+                currentDuration.sub(_rewardsDuration)
+            );
+        }
+
+        require(
+            rewardData[_rewardsToken].periodFinish > block.timestamp,
+            "New reward duration is expired"
+        );
+
+        uint256 leftover = oldRemaining.mul(rewardData[_rewardsToken].rewardRate);
+        uint256 newRemaining = rewardData[_rewardsToken].periodFinish.sub(block.timestamp);
+        rewardData[_rewardsToken].rewardRate = leftover.div(newRemaining);
+
+        rewardData[_rewardsToken].rewardsDuration = _rewardsDuration;
+
+        emit RewardsDurationUpdated(_rewardsToken, rewardData[_rewardsToken].rewardsDuration);
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier updateReward(address account) {
