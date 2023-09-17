@@ -147,5 +147,5 @@ def test_multiplication_overflow(multi, reward_token, base_token, alice, chain, 
     multi.notifyRewardAmount(reward_token, amount, {"from": alice})
 
     chain.mine(timedelta=60)
-    with brownie.reverts("SafeMath: multiplication overflow"):
+    with brownie.reverts():
         multi.earned(alice, reward_token)

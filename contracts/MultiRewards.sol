@@ -1,5 +1,4 @@
-pragma solidity 0.5.17;
-
+pragma solidity >=0.8.12;
 
 library Address {
     /**
@@ -121,11 +120,11 @@ library Math {
     }
 }
 
-contract Owned {
+abstract contract Owned {
     address public owner;
     address public nominatedOwner;
 
-    constructor(address _owner) public {
+    constructor(address _owner) {
         require(_owner != address(0), "Owner address cannot be 0");
         owner = _owner;
         emit OwnerChanged(address(0), _owner);
@@ -156,11 +155,11 @@ contract Owned {
     event OwnerChanged(address oldOwner, address newOwner);
 }
 
-contract Pausable is Owned {
+abstract contract Pausable is Owned {
     uint public lastPauseTime;
     bool public paused;
 
-    constructor() internal {
+    constructor() {
         // This contract is abstract, and thus cannot be instantiated directly
         require(owner != address(0), "Owner must be set");
         // Paused will be false, and lastPauseTime will be 0 upon initialisation
@@ -181,7 +180,7 @@ contract Pausable is Owned {
 
         // If applicable, set the last pause time.
         if (paused) {
-            lastPauseTime = now;
+            lastPauseTime = block.timestamp;
         }
 
         // Let everyone know that our pause state has changed.
@@ -200,7 +199,7 @@ contract ReentrancyGuard {
     /// @dev counter to allow mutex lock with only one SSTORE operation
     uint256 private _guardCounter;
 
-    constructor () internal {
+    constructor () {
         // The counter starts at one to prevent changing it from zero to a non-zero
         // value, which is a more expensive operation.
         _guardCounter = 1;

@@ -1,5 +1,12 @@
 compiler:
   solc:
-    version: 0.5.17
+    version: 0.8.12
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.9.0"
+      - "@openzeppelin/contracts-upgradeable=OpenZeppelin/openzeppelin-contracts-upgradeable@4.9.0"
+
+dependencies:
+    - OpenZeppelin/openzeppelin-contracts@4.9.0
+    - OpenZeppelin/openzeppelin-contracts-upgradeable@4.9.0
 
 autofetch_sources: True
