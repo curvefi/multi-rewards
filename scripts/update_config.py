@@ -1,7 +1,7 @@
-from brownie import Contract, MultiRewards, accounts
+from brownie import Contract, MultiFeeDistribution, accounts
 from brownie.network.gas.strategies import GasNowScalingStrategy
 
-# address of the MultiRewards contract
+# address of the MultiFeeDistribution contract
 MULTIREWARDS_CONTRACT_ADDRESS = "0x"
 REWARDTOKEN_CONTRACT_ADDRESS = "0x"
 
@@ -18,7 +18,7 @@ gas_strategy = GasNowScalingStrategy("standard", "fast")
 
 
 def main():
-    multi = MultiRewards.at(MULTIREWARDS_CONTRACT_ADDRESS)
+    multi = MultiFeeDistribution.at(MULTIREWARDS_CONTRACT_ADDRESS)
     reward = Contract(REWARDTOKEN_CONTRACT_ADDRESS)
 
     # Adding a new reward

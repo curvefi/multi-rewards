@@ -1,4 +1,4 @@
-from brownie import MultiRewards, accounts
+from brownie import MultiFeeDistribution, accounts
 from brownie.network.gas.strategies import GasNowScalingStrategy
 
 # the address that will be used to deploy the contract
@@ -16,15 +16,15 @@ gas_strategy = GasNowScalingStrategy("standard", "fast")
 
 
 def main():
-    multi_rewards = MultiRewards.deploy(
+    multi_fee_distribution = MultiFeeDistribution.deploy(
         OWNER, STAKING_TOKEN_ADDRESS, {"from": DEPLOYER, "gas_price": gas_strategy}
     )
 
     print(
         f"""Success!
-MultiRewards deployed to: {multi_rewards}
+MultiFeeDistribution deployed to: {multi_fee_distribution}
 Owner: {OWNER}
-Please verify the source code here: https://etherscan.io/verifyContract?a={multi_rewards}
+Please verify the source code here: https://etherscan.io/verifyContract?a={multi_fee_distribution}
 Compiler version: 0.5.17
 Optimization: ON
 """

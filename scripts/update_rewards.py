@@ -1,4 +1,4 @@
-from brownie import Contract, MultiRewards, accounts
+from brownie import Contract, MultiFeeDistribution, accounts
 from brownie.network.gas.strategies import GasNowScalingStrategy
 
 # address of the StakingRewards contract
@@ -16,9 +16,10 @@ REWARDS_AMOUNT = 10 ** 19
 
 gas_strategy = GasNowScalingStrategy("standard", "fast")
 
+# NOTE: this script can be deleted as the notify rewards functionality is not needed for the Gamma staking contract
 
 def main():
-    multi = MultiRewards.at(MULTIREWARDS_CONTRACT_ADDRESS)
+    multi = MultiFeeDistribution.at(MULTIREWARDS_CONTRACT_ADDRESS)
     reward = Contract(REWARDTOKEN_CONTRACT_ADDRESS)
 
     # sanity check on the reward amount

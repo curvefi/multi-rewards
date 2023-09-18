@@ -2,40 +2,27 @@
 
 import brownie
 from brownie_tokens.template import ERC20
+from utils import withCustomError
 
 
-# Only owner can call
-def test_only_owner_can_call(multi, alice, bob):
+# Only manager can call
+def test_only_manager_can_call(multi, alice, bob):
     token = ERC20()
-    with brownie.reverts("Only the contract owner may perform this action"):
-        multi.addReward(token, alice, 60, {"from": bob})
+    with brownie.reverts(withCustomError('InsufficientPermission()')):
+        multi.addReward(token, {"from": bob})
 
 
-# Owner can add reward token
-def test_owner_can_add_reward_token(multi, alice, bob):
+# Manager can add reward token
+def test_manager_can_add_reward_token(multi, alice, bob):
     token = ERC20()
-    multi.addReward(token, alice, 60, {"from": alice})
+    multi.setManagers([alice], {"from": alice}) # alice is the owner so she can made herself the manager
+    multi.addReward(token, {"from": alice})
     assert multi.rewardTokens(0) == token
-
-
-# Reward was not already set (rewardDuration == 0)
-def test_duration_not_prior_set(multi, alice, bob):
-    token = ERC20()
-    assert multi.rewardData(token)["rewardsDuration"] == 0
-    multi.addReward(token, alice, 60, {"from": alice})
-    assert multi.rewardData(token)["rewardsDuration"] == 60
-
-
-# rewardsDistributor and rewardsDuration are set correctly
-def test_rewards_properties_set(multi, alice, bob):
-    token = ERC20()
-    multi.addReward(token, alice, 60, {"from": alice})
-    assert multi.rewardData(token)["rewardsDuration"] == 60
-    assert multi.rewardData(token)["rewardsDistributor"] == alice
 
 
 # Reward Per Token works with No Supply
 def test_reward_per_token_zero_supply(multi, alice):
     token = ERC20()
-    multi.addReward(token, alice, 60, {"from": alice})
-    assert multi.rewardPerToken(token) == 0
+    multi.setManagers([alice], {"from": alice})
+    multi.addReward(token, {"from": alice})
+    assert multi.rewardData(token)["rewardPerToken"] == 0
